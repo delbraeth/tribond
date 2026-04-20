@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRIBOND Practice</title>
+  <style>
+    :root {
+      --bg:     #0b0b15;
+      --panel:  #11111d;
+      --card:   #181826;
+      --border: #2c2c48;
+      --accent: #ff3e6c;
+      --gold:   #ffd740;
+      --blue:   #40c4ff;
+      --green:  #69ff9c;
+      --text:   #eceeff;
+      --muted:  #7b7fa8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 60px;
+    }
+
+    .logo {
+      font-size: 3.4rem;
+      font-weight: 900;
+      letter-spacing: 10px;
+      background: linear-gradient(130deg, var(--accent) 0%, var(--gold) 55%, var(--blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .tagline {
+      color: var(--muted);
+      font-size: .8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    /* ── COUNTER ── */
+    .counter {
+      color: var(--muted);
+      font-size: .82rem;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 36px 28px 32px;
+      box-shadow: 0 16px 60px rgba(0,0,0,.55);
+      animation: rise .35s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    @keyframes rise {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── THREE CLUE TILES ── */
+    .tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 32px;
+    }
+    .tile {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 8px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text);
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .4s, background .4s, color .4s;
+    }
+    .tile.lit {
+      border-color: var(--gold);
+      background: rgba(255,215,64,.08);
+      color: var(--gold);
+      animation: pop .45s ease;
+    }
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── REVEAL BUTTON ── */
+    .reveal-btn {
+      width: 100%;
+      padding: 18px;
+      border-radius: 14px;
+      border: 2px dashed var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+      margin-bottom: 0;
+    }
+    .reveal-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255,215,64,.04);
+    }
+
+    /* ── ANSWER REVEAL ── */
+    .answer-block {
+      display: none;
+      width: 100%;
+      text-align: center;
+      animation: rise .3s ease;
+    }
+    .answer-block.show { display: block; }
+
+    .answer-word {
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      background: linear-gradient(130deg, var(--gold), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .bonds {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 28px;
+    }
+    .bond-chip {
+      background: rgba(255,215,64,.06);
+      border: 1px solid rgba(255,215,64,.22);
+      border-radius: 10px;
+      padding: 11px 8px;
+      text-align: center;
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      line-height: 1.4;
+    }
+
+    /* ── NEXT BUTTON ── */
+    .next-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(90deg, var(--accent), #ff7a59);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .next-btn:hover { opacity: .88; transform: scale(1.01); }
+
+    /* ── DONE SCREEN ── */
+    #done {
+      display: none;
+      text-align: center;
+      max-width: 640px;
+      width: 100%;
+      animation: rise .4s ease;
+    }
+    #done.show { display: block; }
+    #done h2 {
+      font-size: 1.4rem;
+      color: var(--muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    #done p {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 32px;
+    }
+    .replay-btn {
+      padding: 16px 52px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(90deg, var(--accent), #ff7a59);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .replay-btn:hover { opacity: .88; }
+  </style>
+</head>
+<body>
+
+<div class="logo">TRIBOND</div>
+<div class="tagline">answer goes before or after each clue word</div>
+
+<div class="counter" id="counter">Puzzle 1 of 50</div>
+
+<div class="card" id="card">
+  <div class="tiles">
+    <div class="tile" id="t0"></div>
+    <div class="tile" id="t1"></div>
+    <div class="tile" id="t2"></div>
+  </div>
+
+  <button class="reveal-btn" id="reveal-btn" onclick="reveal()">Reveal Answer</button>
+
+  <div class="answer-block" id="answer-block">
+    <div class="answer-word" id="answer-word"></div>
+    <div class="bonds" id="bonds"></div>
+    <button class="next-btn" id="next-btn" onclick="next()">Next Puzzle →</button>
+  </div>
+</div>
+
+<div id="done">
+  <h2>All Done!</h2>
+  <p>You've worked through all 50 TRIBONDs.</p>
+  <button class="replay-btn" onclick="init()">🔁 Play Again</button>
+</div>
+
+<script>
+const DATA = [
+  // ── 1-25 ──────────────────────────────────────────────────────
+  { items: ["WHEEL",   "HORSE",   "GROCERY"],  answer: "CART",   bonds: ["CARTWHEEL",    "HORSE CART",   "GROCERY CART"]  },
+  { items: ["LIBERTY", "HOP",     "DUMB"],     answer: "BELL",   bonds: ["LIBERTY BELL", "BELLHOP",      "DUMBBELL"]      },
+  { items: ["DOWN",    "WIND",    "OUT"],       answer: "FALL",   bonds: ["DOWNFALL",     "WINDFALL",     "FALLOUT"]       },
+  { items: ["STAIR",   "SUIT",    "BOOK"],      answer: "CASE",   bonds: ["STAIRCASE",    "SUITCASE",     "CASEBOOK"]      },
+  { items: ["SKATE",   "WALK",    "CARD"],      answer: "BOARD",  bonds: ["SKATEBOARD",   "BOARDWALK",    "CARDBOARD"]     },
+  { items: ["BUTTER",  "WHEEL",   "HORSE"],     answer: "FLY",    bonds: ["BUTTERFLY",    "FLYWHEEL",     "HORSEFLY"]      },
+  { items: ["BOOK",    "HOLE",    "EARTH"],     answer: "WORM",   bonds: ["BOOKWORM",     "WORMHOLE",     "EARTHWORM"]     },
+  { items: ["CHEESE",  "WALK",    "PAN"],       answer: "CAKE",   bonds: ["CHEESECAKE",   "CAKEWALK",     "PANCAKE"]       },
+  { items: ["TOOTH",   "STROKE",  "PAINT"],     answer: "BRUSH",  bonds: ["TOOTHBRUSH",   "BRUSHSTROKE",  "PAINTBRUSH"]    },
+  { items: ["OVER",    "HANGER",  "TOP"],       answer: "COAT",   bonds: ["OVERCOAT",     "COAT HANGER",  "TOPCOAT"]       },
+  { items: ["THUMB",   "OUT",     "FINGER"],    answer: "PRINT",  bonds: ["THUMBPRINT",   "PRINTOUT",     "FINGERPRINT"]   },
+  { items: ["STOP",    "TOWER",   "WRIST"],     answer: "WATCH",  bonds: ["STOPWATCH",    "WATCHTOWER",   "WRISTWATCH"]    },
+  { items: ["LAND",    "DOWN",    "TRADE"],     answer: "MARK",   bonds: ["LANDMARK",     "MARKDOWN",     "TRADEMARK"]     },
+  { items: ["STAR",    "YEAR",    "SUN"],       answer: "LIGHT",  bonds: ["STARLIGHT",    "LIGHT-YEAR",   "SUNLIGHT"]      },
+  { items: ["SNOW",    "PARK",    "FIRE"],      answer: "BALL",   bonds: ["SNOWBALL",     "BALLPARK",     "FIREBALL"]      },
+  { items: ["HONEY",   "LINE",    "BUMBLE"],    answer: "BEE",    bonds: ["HONEYBEE",     "BEELINE",      "BUMBLEBEE"]     },
+  { items: ["OVER",    "ROOM",    "BLACK"],     answer: "HEAD",   bonds: ["OVERHEAD",     "HEADROOM",     "BLACKHEAD"]     },
+  { items: ["HEAD",    "WAGON",   "WAIST"],     answer: "BAND",   bonds: ["HEADBAND",     "BANDWAGON",    "WAISTBAND"]     },
+  { items: ["FIRE",    "BALL",    "HOUSE"],     answer: "POWER",  bonds: ["FIREPOWER",    "POWERBALL",    "POWERHOUSE"]    },
+  { items: ["DEAD",    "UP",      "HAIR"],      answer: "LINE",   bonds: ["DEADLINE",     "LINEUP",       "HAIRLINE"]      },
+  { items: ["SPIDER",  "HOLE",    "IRON"],      answer: "MAN",    bonds: ["SPIDER-MAN",   "MANHOLE",      "IRON MAN"]      },
+  { items: ["POP",     "STARCH",  "UNI"],       answer: "CORN",   bonds: ["POPCORN",      "CORNSTARCH",   "UNICORN"]       },
+  { items: ["BACK",    "HOG",     "FAIR"],      answer: "GROUND", bonds: ["BACKGROUND",   "GROUNDHOG",    "FAIRGROUND"]    },
+  { items: ["TABLE",   "SPIN",    "LAP"],       answer: "TOP",    bonds: ["TABLETOP",     "TOPSPIN",      "LAPTOP"]        },
+  { items: ["END",     "WINNER",  "STOP"],      answer: "GAME",   bonds: ["ENDGAME",      "GAME WINNER",  "GAMESTOP"]      },
+  // ── 26-50 ─────────────────────────────────────────────────────
+  { items: ["JELLY",   "BOWL",    "SUN"],       answer: "FISH",   bonds: ["JELLYFISH",    "FISHBOWL",     "SUNFISH"]       },
+  { items: ["THUNDER", "TROOPER", "SNOW"],      answer: "STORM",  bonds: ["THUNDERSTORM", "STORMTROOPER", "SNOWSTORM"]     },
+  { items: ["PEANUT",  "CUP",     "FLY"],       answer: "BUTTER", bonds: ["PEANUT BUTTER","BUTTERCUP",    "BUTTERFLY"]     },
+  { items: ["SAIL",    "HOUSE",   "MOTOR"],     answer: "BOAT",   bonds: ["SAILBOAT",     "BOATHOUSE",    "MOTORBOAT"]     },
+  { items: ["DRUM",    "SHIFT",   "CANDLE"],    answer: "STICK",  bonds: ["DRUMSTICK",    "STICK SHIFT",  "CANDLESTICK"]   },
+  { items: ["BOW",     "BREAK",   "NECK"],      answer: "TIE",    bonds: ["BOW TIE",      "TIEBREAK",     "NECKTIE"]       },
+  { items: ["BIRTH",   "DREAM",   "SUN"],       answer: "DAY",    bonds: ["BIRTHDAY",     "DAYDREAM",     "SUNDAY"]        },
+  { items: ["TRAP",    "KNOB",    "BACK"],      answer: "DOOR",   bonds: ["TRAPDOOR",     "DOORKNOB",     "BACKDOOR"]      },
+  { items: ["MUD",     "SHOW",    "LAND"],      answer: "SLIDE",  bonds: ["MUDSLIDE",     "SLIDESHOW",    "LANDSLIDE"]     },
+  { items: ["LIME",    "WALL",    "MILE"],      answer: "STONE",  bonds: ["LIMESTONE",    "STONEWALL",    "MILESTONE"]     },
+  { items: ["GREEN",   "HOLD",    "WARE"],      answer: "HOUSE",  bonds: ["GREENHOUSE",   "HOUSEHOLD",    "WAREHOUSE"]     },
+  { items: ["FLASH",   "PACK",    "PAPER"],     answer: "BACK",   bonds: ["FLASHBACK",    "BACKPACK",     "PAPERBACK"]     },
+  { items: ["MUSH",    "MATE",    "CLASS"],     answer: "ROOM",   bonds: ["MUSHROOM",     "ROOMMATE",     "CLASSROOM"]     },
+  { items: ["FLAG",    "WRECK",   "COURT"],     answer: "SHIP",   bonds: ["FLAGSHIP",     "SHIPWRECK",    "COURTSHIP"]     },
+  { items: ["CAMP",    "PLACE",   "BON"],       answer: "FIRE",   bonds: ["CAMPFIRE",     "FIREPLACE",    "BONFIRE"]       },
+  { items: ["ROAD",    "WALK",    "SEA"],       answer: "SIDE",   bonds: ["ROADSIDE",     "SIDEWALK",     "SEASIDE"]       },
+  { items: ["PAD",     "DOWN",    "GRID"],      answer: "LOCK",   bonds: ["PADLOCK",      "LOCKDOWN",     "GRIDLOCK"]      },
+  { items: ["FIRE",    "HOUSE",   "JAIL"],      answer: "BIRD",   bonds: ["FIREBIRD",     "BIRDHOUSE",    "JAILBIRD"]      },
+  { items: ["MIDDLE",  "DRUM",    "LOBE"],      answer: "EAR",    bonds: ["MIDDLE EAR",   "EARDRUM",      "EARLOBE"]       },
+  { items: ["TEAM",    "OUT",     "HOME"],      answer: "WORK",   bonds: ["TEAMWORK",     "WORKOUT",      "HOMEWORK"]      },
+  { items: ["MAIL",    "CAR",     "GEAR"],      answer: "BOX",    bonds: ["MAILBOX",      "BOXCAR",       "GEARBOX"]       },
+  { items: ["DOWN",    "SHIP",    "HOME"],      answer: "TOWN",   bonds: ["DOWNTOWN",     "TOWNSHIP",     "HOMETOWN"]      },
+  { items: ["GRAVE",   "STICK",   "VINE"],      answer: "YARD",   bonds: ["GRAVEYARD",    "YARDSTICK",    "VINEYARD"]      },
+  { items: ["TURN",    "STONE",   "BOARD"],     answer: "KEY",    bonds: ["TURNKEY",      "KEYSTONE",     "KEYBOARD"]      },
+  { items: ["DOOR",    "LADDER",  "FOOT"],      answer: "STEP",   bonds: ["DOORSTEP",     "STEPLADDER",   "FOOTSTEP"]      },
+];
+
+let current = 0;
+
+function init() {
+  current = 0;
+  document.getElementById('card').style.display = '';
+  document.getElementById('done').classList.remove('show');
+  render();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function render() {
+  const d = DATA[current];
+
+  document.getElementById('counter').textContent = `Puzzle ${current + 1} of ${DATA.length}`;
+
+  // Pair each item with its bond, shuffle, then split back out
+  const pairs = d.items.map((item, i) => ({ item, bond: d.bonds[i] }));
+  shuffle(pairs);
+
+  ['t0','t1','t2'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.textContent = pairs[i].item;
+    el.classList.remove('lit');
+  });
+
+  // Store shuffled bonds so reveal shows them in the right order
+  DATA[current]._shuffledBonds = pairs.map(p => p.bond);
+
+  document.getElementById('reveal-btn').style.display = '';
+  const ab = document.getElementById('answer-block');
+  ab.classList.remove('show');
+
+  const nb = document.getElementById('next-btn');
+  nb.textContent = current === DATA.length - 1 ? 'Finish 🏁' : 'Next Puzzle →';
+}
+
+function reveal() {
+  const d = DATA[current];
+
+  ['t0','t1','t2'].forEach(id => document.getElementById(id).classList.add('lit'));
+
+  document.getElementById('answer-word').textContent = d.answer;
+
+  const bondsEl = document.getElementById('bonds');
+  bondsEl.innerHTML = '';
+  (d._shuffledBonds || d.bonds).forEach(b => {
+    const chip = document.createElement('div');
+    chip.className = 'bond-chip';
+    chip.textContent = b;
+    bondsEl.appendChild(chip);
+  });
+
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('answer-block').classList.add('show');
+}
+
+function next() {
+  current++;
+  if (current >= DATA.length) {
+    document.getElementById('card').style.display = 'none';
+    document.getElementById('done').classList.add('show');
+  } else {
+    document.getElementById('card').style.animation = 'none';
+    document.getElementById('card').offsetHeight;
+    document.getElementById('card').style.animation = '';
+    render();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
