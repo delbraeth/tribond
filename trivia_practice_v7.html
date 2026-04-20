@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRIBOND Practice</title>
+  <style>
+    :root {
+      --bg:     #0b0b15;
+      --panel:  #11111d;
+      --card:   #181826;
+      --border: #2c2c48;
+      --accent: #ff3e6c;
+      --gold:   #ffd740;
+      --blue:   #40c4ff;
+      --text:   #eceeff;
+      --muted:  #7b7fa8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 16px 60px; }
+    .logo { font-size: 3.4rem; font-weight: 900; letter-spacing: 10px; background: linear-gradient(130deg, var(--accent) 0%, var(--gold) 55%, var(--blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; }
+    .tagline { color: var(--muted); font-size: .8rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 36px; }
+    .counter { color: var(--muted); font-size: .82rem; margin-bottom: 20px; letter-spacing: 1px; }
+    .card { position: relative; width: 100%; max-width: 640px; background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 36px 28px 32px; box-shadow: 0 16px 60px rgba(0,0,0,.55); animation: rise .35s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .diff-dot { position: absolute; top: 16px; right: 20px; width: 11px; height: 11px; border-radius: 50%; transition: background .25s; }
+    .diff-dot.d1 { background: #3ddc84; box-shadow: 0 0 7px rgba(61,220,132,.6); }
+    .diff-dot.d2 { background: #ffb300; box-shadow: 0 0 7px rgba(255,179,0,.6); }
+    .diff-dot.d3 { background: var(--accent); box-shadow: 0 0 7px rgba(255,62,108,.6); }
+    .diff-dot.d4 { background: #a855f7; box-shadow: 0 0 9px rgba(168,85,247,.7); }
+    @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    .tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 32px; }
+    .tile { background: var(--panel); border: 2px solid var(--border); border-radius: 14px; padding: 24px 8px; text-align: center; font-size: 1.1rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text); min-height: 80px; display: flex; align-items: center; justify-content: center; transition: border-color .4s, background .4s, color .4s; }
+    .tile.lit { border-color: var(--gold); background: rgba(255,215,64,.08); color: var(--gold); animation: pop .45s ease; }
+    @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.07); } 100% { transform: scale(1); } }
+    .reveal-btn { width: 100%; padding: 18px; border-radius: 14px; border: 2px dashed var(--border); background: transparent; color: var(--muted); font-size: 1rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: border-color .2s, color .2s, background .2s; }
+    .reveal-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(255,215,64,.04); }
+    .answer-block { display: none; width: 100%; text-align: center; animation: rise .3s ease; }
+    .answer-block.show { display: block; }
+    .answer-word { font-size: 3.2rem; font-weight: 900; letter-spacing: 6px; text-transform: uppercase; background: linear-gradient(130deg, var(--gold), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; line-height: 1; }
+    .homophone-hint { font-size: 1.7rem; font-weight: 900; letter-spacing: 5px; text-transform: uppercase; background: linear-gradient(130deg, var(--gold), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-top: -10px; margin-bottom: 18px; opacity: .65; min-height: 0; line-height: 1; }
+    .homophone-label { display: block; font-size: .65rem; font-weight: 700; letter-spacing: 2.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; margin-top: 12px; }
+    .bonds { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 28px; }
+    .bond-chip { background: rgba(255,215,64,.06); border: 1px solid rgba(255,215,64,.22); border-radius: 10px; padding: 11px 8px; text-align: center; font-size: .82rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--gold); line-height: 1.4; }
+    .next-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, var(--accent), #ff7a59); color: #fff; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity .2s, transform .15s; }
+    .next-btn:hover { opacity: .88; transform: scale(1.01); }
+    #done { display: none; text-align: center; max-width: 640px; width: 100%; animation: rise .4s ease; }
+    #done.show { display: block; }
+    #done h2 { font-size: 1.4rem; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+    #done p { font-size: 1.1rem; color: var(--text); margin-bottom: 32px; }
+    .replay-btn { padding: 16px 52px; border-radius: 14px; border: none; background: linear-gradient(90deg, var(--accent), #ff7a59); color: #fff; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity .2s; }
+    .replay-btn:hover { opacity: .88; }
+  </style>
+</head>
+<body>
+<div class="logo">TRIBOND</div>
+<div class="tagline">answer goes before or after each clue word</div>
+<div class="counter" id="counter">Puzzle 1 of 150</div>
+<div class="card" id="card">
+  <div class="diff-dot" id="diff-dot"></div>
+  <div class="tiles">
+    <div class="tile" id="t0"></div>
+    <div class="tile" id="t1"></div>
+    <div class="tile" id="t2"></div>
+  </div>
+  <button class="reveal-btn" id="reveal-btn" onclick="reveal()">Reveal Answer</button>
+  <div class="answer-block" id="answer-block">
+    <div class="answer-word" id="answer-word"></div>
+    <span class="homophone-label" id="homophone-label"></span>
+    <div class="homophone-hint" id="homophone-hint"></div>
+    <div class="bonds" id="bonds"></div>
+    <button class="next-btn" id="next-btn" onclick="next()">Next Puzzle &rarr;</button>
+  </div>
+</div>
+<div id="done">
+  <h2>All Done!</h2>
+  <p id="done-msg"></p>
+  <button class="replay-btn" onclick="init()">&#128257; Play Again</button>
+</div>
+<script>
+const DATA = [  { items: ["WHEEL", "HORSE", "GROCERY"], answer: "CART", difficulty: 2, bonds: ["CARTWHEEL", "HORSE CART", "GROCERY CART"] },  { items: ["LIBERTY", "HOP", "DUMB"], answer: "BELL", difficulty: 1, bonds: ["LIBERTY BELL", "BELLHOP", "DUMBBELL"] },  { items: ["DOWN", "WIND", "OUT"], answer: "FALL", difficulty: 1, bonds: ["DOWNFALL", "WINDFALL", "FALLOUT"] },  { items: ["STAIR", "SUIT", "BOOK"], answer: "CASE", difficulty: 1, bonds: ["STAIRCASE", "SUITCASE", "CASEBOOK"] },  { items: ["SKATE", "WALK", "CARD"], answer: "BOARD", difficulty: 1, bonds: ["SKATEBOARD", "BOARDWALK", "CARDBOARD"] },  { items: ["BUTTER", "WHEEL", "HORSE"], answer: "FLY", difficulty: 1, bonds: ["BUTTERFLY", "FLYWHEEL", "HORSEFLY"] },  { items: ["BOOK", "HOLE", "EARTH"], answer: "WORM", difficulty: 1, bonds: ["BOOKWORM", "WORMHOLE", "EARTHWORM"] },  { items: ["CHEESE", "WALK", "PAN"], answer: "CAKE", difficulty: 1, bonds: ["CHEESECAKE", "CAKEWALK", "PANCAKE"] },  { items: ["TOOTH", "STROKE", "PAINT"], answer: "BRUSH", difficulty: 1, bonds: ["TOOTHBRUSH", "BRUSHSTROKE", "PAINTBRUSH"] },  { items: ["OVER", "HANGER", "TOP"], answer: "COAT", difficulty: 2, bonds: ["OVERCOAT", "COAT HANGER", "TOPCOAT"] },  { items: ["THUMB", "OUT", "FINGER"], answer: "PRINT", difficulty: 1, bonds: ["THUMBPRINT", "PRINTOUT", "FINGERPRINT"] },  { items: ["STOP", "TOWER", "WRIST"], answer: "WATCH", difficulty: 1, bonds: ["STOPWATCH", "WATCHTOWER", "WRISTWATCH"] },  { items: ["LAND", "DOWN", "TRADE"], answer: "MARK", difficulty: 1, bonds: ["LANDMARK", "MARKDOWN", "TRADEMARK"] },  { items: ["STAR", "YEAR", "SUN"], answer: "LIGHT", difficulty: 1, bonds: ["STARLIGHT", "LIGHT-YEAR", "SUNLIGHT"] },  { items: ["SNOW", "PARK", "FIRE"], answer: "BALL", difficulty: 1, bonds: ["SNOWBALL", "BALLPARK", "FIREBALL"] },  { items: ["HONEY", "LINE", "BUMBLE"], answer: "BEE", difficulty: 1, bonds: ["HONEYBEE", "BEELINE", "BUMBLEBEE"] },  { items: ["OVER", "ROOM", "BLACK"], answer: "HEAD", difficulty: 1, bonds: ["OVERHEAD", "HEADROOM", "BLACKHEAD"] },  { items: ["HEAD", "WAGON", "WAIST"], answer: "BAND", difficulty: 1, bonds: ["HEADBAND", "BANDWAGON", "WAISTBAND"] },  { items: ["FIRE", "BALL", "HOUSE"], answer: "POWER", difficulty: 1, bonds: ["FIREPOWER", "POWERBALL", "POWERHOUSE"] },  { items: ["DEAD", "UP", "HAIR"], answer: "LINE", difficulty: 1, bonds: ["DEADLINE", "LINEUP", "HAIRLINE"] },  { items: ["SPIDER", "HOLE", "IRON"], answer: "MAN", difficulty: 1, bonds: ["SPIDER-MAN", "MANHOLE", "IRON MAN"] },  { items: ["POP", "STARCH", "UNI"], answer: "CORN", difficulty: 1, bonds: ["POPCORN", "CORNSTARCH", "UNICORN"] },  { items: ["BACK", "HOG", "FAIR"], answer: "GROUND", difficulty: 1, bonds: ["BACKGROUND", "GROUNDHOG", "FAIRGROUND"] },  { items: ["TABLE", "SPIN", "LAP"], answer: "TOP", difficulty: 1, bonds: ["TABLETOP", "TOPSPIN", "LAPTOP"] },  { items: ["END", "WINNER", "STOP"], answer: "GAME", difficulty: 1, bonds: ["ENDGAME", "GAME WINNER", "GAMESTOP"] },  { items: ["JELLY", "BOWL", "SUN"], answer: "FISH", difficulty: 1, bonds: ["JELLYFISH", "FISHBOWL", "SUNFISH"] },  { items: ["THUNDER", "TROOPER", "SNOW"], answer: "STORM", difficulty: 1, bonds: ["THUNDERSTORM", "STORMTROOPER", "SNOWSTORM"] },  { items: ["PEANUT", "CUP", "FLY"], answer: "BUTTER", difficulty: 2, bonds: ["PEANUT BUTTER", "BUTTERCUP", "BUTTERFLY"] },  { items: ["SAIL", "HOUSE", "MOTOR"], answer: "BOAT", difficulty: 1, bonds: ["SAILBOAT", "BOATHOUSE", "MOTORBOAT"] },  { items: ["DRUM", "SHIFT", "CANDLE"], answer: "STICK", difficulty: 2, bonds: ["DRUMSTICK", "STICK SHIFT", "CANDLESTICK"] },  { items: ["BOW", "BREAK", "NECK"], answer: "TIE", difficulty: 2, bonds: ["BOW TIE", "TIEBREAK", "NECKTIE"] },  { items: ["BIRTH", "DREAM", "SUN"], answer: "DAY", difficulty: 1, bonds: ["BIRTHDAY", "DAYDREAM", "SUNDAY"] },  { items: ["TRAP", "KNOB", "BACK"], answer: "DOOR", difficulty: 1, bonds: ["TRAPDOOR", "DOORKNOB", "BACKDOOR"] },  { items: ["MUD", "SHOW", "LAND"], answer: "SLIDE", difficulty: 1, bonds: ["MUDSLIDE", "SLIDESHOW", "LANDSLIDE"] },  { items: ["LIME", "WALL", "MILE"], answer: "STONE", difficulty: 1, bonds: ["LIMESTONE", "STONEWALL", "MILESTONE"] },  { items: ["GREEN", "HOLD", "WARE"], answer: "HOUSE", difficulty: 1, bonds: ["GREENHOUSE", "HOUSEHOLD", "WAREHOUSE"] },  { items: ["FLASH", "PACK", "PAPER"], answer: "BACK", difficulty: 1, bonds: ["FLASHBACK", "BACKPACK", "PAPERBACK"] },  { items: ["MUSH", "MATE", "CLASS"], answer: "ROOM", difficulty: 1, bonds: ["MUSHROOM", "ROOMMATE", "CLASSROOM"] },  { items: ["FLAG", "WRECK", "COURT"], answer: "SHIP", difficulty: 1, bonds: ["FLAGSHIP", "SHIPWRECK", "COURTSHIP"] },  { items: ["CAMP", "PLACE", "BON"], answer: "FIRE", difficulty: 1, bonds: ["CAMPFIRE", "FIREPLACE", "BONFIRE"] },  { items: ["ROAD", "WALK", "SEA"], answer: "SIDE", difficulty: 1, bonds: ["ROADSIDE", "SIDEWALK", "SEASIDE"] },  { items: ["PAD", "DOWN", "GRID"], answer: "LOCK", difficulty: 1, bonds: ["PADLOCK", "LOCKDOWN", "GRIDLOCK"] },  { items: ["FIRE", "HOUSE", "JAIL"], answer: "BIRD", difficulty: 1, bonds: ["FIREBIRD", "BIRDHOUSE", "JAILBIRD"] },  { items: ["MIDDLE", "DRUM", "LOBE"], answer: "EAR", difficulty: 1, bonds: ["MIDDLE EAR", "EARDRUM", "EARLOBE"] },  { items: ["TEAM", "OUT", "HOME"], answer: "WORK", difficulty: 1, bonds: ["TEAMWORK", "WORKOUT", "HOMEWORK"] },  { items: ["MAIL", "CAR", "GEAR"], answer: "BOX", difficulty: 1, bonds: ["MAILBOX", "BOXCAR", "GEARBOX"] },  { items: ["DOWN", "SHIP", "HOME"], answer: "TOWN", difficulty: 1, bonds: ["DOWNTOWN", "TOWNSHIP", "HOMETOWN"] },  { items: ["GRAVE", "STICK", "VINE"], answer: "YARD", difficulty: 1, bonds: ["GRAVEYARD", "YARDSTICK", "VINEYARD"] },  { items: ["TURN", "STONE", "BOARD"], answer: "KEY", difficulty: 1, bonds: ["TURNKEY", "KEYSTONE", "KEYBOARD"] },  { items: ["DOOR", "LADDER", "FOOT"], answer: "STEP", difficulty: 1, bonds: ["DOORSTEP", "STEPLADDER", "FOOTSTEP"] },  { items: ["WALL", "WORK", "NEWS"], answer: "PAPER", difficulty: 1, bonds: ["WALLPAPER", "PAPERWORK", "NEWSPAPER"] },  { items: ["FALL", "MARK", "BACK"], answer: "WATER", difficulty: 1, bonds: ["WATERFALL", "WATERMARK", "BACKWATER"] },  { items: ["MARK", "TEXT", "NOTE"], answer: "BOOK", difficulty: 1, bonds: ["BOOKMARK", "TEXTBOOK", "NOTEBOOK"] },  { items: ["STONE", "CASTLE", "QUICK"], answer: "SAND", difficulty: 1, bonds: ["SANDSTONE", "SANDCASTLE", "QUICKSAND"] },  { items: ["TIME", "BED", "BOARD"], answer: "SPRING", difficulty: 1, bonds: ["SPRINGTIME", "BEDSPRING", "SPRINGBOARD"] },  { items: ["BALL", "WARE", "WOOD"], answer: "SOFT", difficulty: 1, bonds: ["SOFTBALL", "SOFTWARE", "SOFTWOOD"] },  { items: ["ALL", "BOARD", "TURN"], answer: "OVER", difficulty: 1, bonds: ["OVERALL", "OVERBOARD", "TURNOVER"] },  { items: ["GROUND", "OFF", "WORD"], answer: "PLAY", difficulty: 1, bonds: ["PLAYGROUND", "PLAYOFF", "WORDPLAY"] },  { items: ["CLUB", "FALL", "OVER"], answer: "NIGHT", difficulty: 1, bonds: ["NIGHTCLUB", "NIGHTFALL", "OVERNIGHT"] },  { items: ["OUT", "LINE", "HALF"], answer: "TIME", difficulty: 1, bonds: ["TIMEOUT", "TIMELINE", "HALFTIME"] },  { items: ["SHAKE", "MADE", "SHORT"], answer: "HAND", difficulty: 1, bonds: ["HANDSHAKE", "HANDMADE", "SHORTHAND"] },  { items: ["BOW", "COAT", "DROP"], answer: "RAIN", difficulty: 1, bonds: ["RAINBOW", "RAINCOAT", "RAINDROP"] },  { items: ["BURN", "FLOWER", "GLASSES"], answer: "SUN", difficulty: 1, bonds: ["SUNBURN", "SUNFLOWER", "SUNGLASSES"] },  { items: ["NOTE", "HOLD", "FLAT"], answer: "FOOT", difficulty: 1, bonds: ["FOOTNOTE", "FOOTHOLD", "FLATFOOT"] },  { items: ["THROUGH", "DOWN", "JAIL"], answer: "BREAK", difficulty: 1, bonds: ["BREAKTHROUGH", "BREAKDOWN", "JAILBREAK"] },  { items: ["GUARD", "WORK", "SOME"], answer: "BODY", difficulty: 1, bonds: ["BODYGUARD", "BODYWORK", "SOMEBODY"] },  { items: ["SNAP", "BLOODED", "SHOULDER"], answer: "COLD", difficulty: 2, bonds: ["COLD SNAP", "COLD-BLOODED", "COLD SHOULDER"] },  { items: ["MILL", "SHIELD", "TAIL"], answer: "WIND", difficulty: 1, bonds: ["WINDMILL", "WINDSHIELD", "TAILWIND"] },  { items: ["WORD", "ROADS", "RED"], answer: "CROSS", difficulty: 2, bonds: ["CROSSWORD", "CROSSROADS", "RED CROSS"] },  { items: ["PRINT", "BELL", "BERRY"], answer: "BLUE", difficulty: 1, bonds: ["BLUEPRINT", "BLUEBELL", "BLUEBERRY"] },  { items: ["BERRY", "SMITH", "OUT"], answer: "BLACK", difficulty: 1, bonds: ["BLACKBERRY", "BLACKSMITH", "BLACKOUT"] },  { items: ["BACK", "LAND", "HOUSE"], answer: "GREEN", difficulty: 1, bonds: ["GREENBACK", "GREENLAND", "GREENHOUSE"] },  { items: ["OUT", "BOARD", "WASH"], answer: "WHITE", difficulty: 1, bonds: ["WHITEOUT", "WHITEBOARD", "WHITEWASH"] },  { items: ["WOOD", "NECK", "EYE"], answer: "RED", difficulty: 1, bonds: ["REDWOOD", "REDNECK", "RED-EYE"] },  { items: ["MINE", "FIELD", "MARI"], answer: "GOLD", difficulty: 1, bonds: ["GOLDMINE", "GOLDFIELD", "MARIGOLD"] },  { items: ["WARE", "SMITH", "QUICK"], answer: "SILVER", difficulty: 1, bonds: ["SILVERWARE", "SILVERSMITH", "QUICKSILVER"] },  { items: ["BACK", "POWER", "DARK"], answer: "HORSE", difficulty: 2, bonds: ["HORSEBACK", "HORSEPOWER", "DARK HORSE"] },  { items: ["FISH", "NAP", "WILD"], answer: "CAT", difficulty: 1, bonds: ["CATFISH", "CATNAP", "WILDCAT"] },  { items: ["HOUSE", "HOT", "WOOD"], answer: "DOG", difficulty: 1, bonds: ["DOGHOUSE", "HOTDOG", "DOGWOOD"] },  { items: ["HUG", "SKIN", "TEDDY"], answer: "BEAR", difficulty: 2, bonds: ["BEARHUG", "BEARSKIN", "TEDDY BEAR"] },  { items: ["TROT", "ARCTIC", "HOLE"], answer: "FOX", difficulty: 1, bonds: ["FOXTROT", "ARCTIC FOX", "FOXHOLE"] },  { items: ["WERE", "PACK", "LONE"], answer: "WOLF", difficulty: 2, bonds: ["WEREWOLF", "WOLFPACK", "LONE WOLF"] },  { items: ["BOARD", "ROCK", "GAZE"], answer: "STAR", difficulty: 1, bonds: ["STARBOARD", "ROCKSTAR", "STARGAZE"] },  { items: ["SHINE", "WALK", "FULL"], answer: "MOON", difficulty: 1, bonds: ["MOONSHINE", "MOONWALK", "FULL MOON"] },  { items: ["QUAKE", "LING", "MOTHER"], answer: "EARTH", difficulty: 2, bonds: ["EARTHQUAKE", "EARTHLING", "MOTHER EARTH"] },  { items: ["SHELL", "WEED", "OVER"], answer: "SEA", difficulty: 1, bonds: ["SEASHELL", "SEAWEED", "OVERSEAS"] },  { items: ["PORT", "CRAFT", "MID"], answer: "AIR", difficulty: 1, bonds: ["AIRPORT", "AIRCRAFT", "MIDAIR"] },  { items: ["BERG", "CREAM", "BLACK"], answer: "ICE", difficulty: 2, bonds: ["ICEBERG", "ICE CREAM", "BLACK ICE"] },  { items: ["FLAKE", "SUIT", "DRIFT"], answer: "SNOW", difficulty: 1, bonds: ["SNOWFLAKE", "SNOWSUIT", "SNOWDRIFT"] },  { items: ["WORK", "HAIR", "FISH"], answer: "NET", difficulty: 1, bonds: ["NETWORK", "HAIRNET", "FISHNET"] },  { items: ["TOP", "FAMILY", "CHRISTMAS"], answer: "TREE", difficulty: 2, bonds: ["TREETOP", "FAMILY TREE", "CHRISTMAS TREE"] },  { items: ["WORK", "DEAD", "HOLLY"], answer: "WOOD", difficulty: 1, bonds: ["WOODWORK", "DEADWOOD", "HOLLYWOOD"] },  { items: ["HOUSE", "WARE", "HOUR"], answer: "GLASS", difficulty: 1, bonds: ["GLASSHOUSE", "GLASSWARE", "HOURGLASS"] },  { items: ["LESS", "TAP", "HIGH"], answer: "WIRE", difficulty: 1, bonds: ["WIRELESS", "WIRETAP", "HIGHWIRE"] },  { items: ["LEADER", "ROAD", "EAR"], answer: "RING", difficulty: 1, bonds: ["RINGLEADER", "RINGROAD", "EARRING"] },  { items: ["SAW", "GANG", "KEY"], answer: "CHAIN", difficulty: 1, bonds: ["CHAINSAW", "CHAINGANG", "KEYCHAIN"] },  { items: ["SITE", "BOOT", "GROUND"], answer: "CAMP", difficulty: 1, bonds: ["CAMPSITE", "BOOTCAMP", "CAMPGROUND"] },  { items: ["LIFT", "WINDOW", "WORK"], answer: "SHOP", difficulty: 2, bonds: ["SHOPLIFT", "WINDOW SHOP", "WORKSHOP"] },  { items: ["WAY", "BUMP", "AIR"], answer: "SPEED", difficulty: 2, bonds: ["SPEEDWAY", "SPEED BUMP", "AIRSPEED"] },  { items: ["RUPT", "RIVER", "ROLL"], answer: "BANK", difficulty: 1, bonds: ["BANKRUPT", "RIVERBANK", "BANKROLL"] },  { items: ["PLACE", "SUPER", "STOCK"], answer: "MARKET", difficulty: 2, bonds: ["MARKETPLACE", "SUPERMARKET", "STOCK MARKET"] },  { items: ["SHOT", "BOAT", "LIFE"], answer: "LONG", difficulty: 1, bonds: ["LONGSHOT", "LONGBOAT", "LIFELONG"] },  { items: ["LESS", "GUN", "VIEW"], answer: "POINT", difficulty: 1, bonds: ["POINTLESS", "GUNPOINT", "VIEWPOINT"] },  { items: ["POST", "WILD", "BOARD"], answer: "CARD", difficulty: 1, bonds: ["POSTCARD", "WILD CARD", "CARDBOARD"] },  { items: ["BURST", "LESS", "THUNDER"], answer: "CLOUD", difficulty: 1, bonds: ["CLOUDBURST", "CLOUDLESS", "THUNDERCLOUD"] },  { items: ["BLOCK", "RUNNER", "RAIL"], answer: "ROAD", difficulty: 1, bonds: ["ROADBLOCK", "ROADRUNNER", "RAILROAD"] },  { items: ["WAY", "FOOT", "FINDER"], answer: "PATH", difficulty: 1, bonds: ["PATHWAY", "FOOTPATH", "PATHFINDER"] },  { items: ["GOAL", "BATTLE", "IN"], answer: "FIELD", difficulty: 2, bonds: ["FIELD GOAL", "BATTLEFIELD", "INFIELD"] },  { items: ["SET", "UP", "BAND"], answer: "SWING", difficulty: 2, bonds: ["SWINGSET", "UPSWING", "SWING BAND"] },  { items: ["CROSS", "JAY", "OUT"], answer: "WALK", difficulty: 1, bonds: ["CROSSWALK", "JAYWALK", "WALKOUT"] },  { items: ["WAY", "DOWN", "OUT"], answer: "RUN", difficulty: 1, bonds: ["RUNWAY", "RUNDOWN", "OUTRUN"] },  { items: ["START", "SUIT", "HIGH"], answer: "JUMP", difficulty: 1, bonds: ["JUMPSTART", "JUMPSUIT", "HIGH JUMP"] },  { items: ["WAY", "OVER", "TEST"], answer: "DRIVE", difficulty: 2, bonds: ["DRIVEWAY", "OVERDRIVE", "TEST DRIVE"] },  { items: ["UP", "UNDER", "BED"], answer: "COVER", difficulty: 1, bonds: ["COVERUP", "UNDERCOVER", "BEDCOVER"] },  { items: ["RAIL", "LIFE", "BODY"], answer: "GUARD", difficulty: 1, bonds: ["GUARDRAIL", "LIFEGUARD", "BODYGUARD"] },  { items: ["BOX", "STICK", "MIS"], answer: "MATCH", difficulty: 1, bonds: ["MATCHBOX", "MATCHSTICK", "MISMATCH"] },  { items: ["LET", "CLOVER", "GOLD"], answer: "LEAF", difficulty: 1, bonds: ["LEAFLET", "CLOVERLEAF", "GOLD LEAF"] },  { items: ["POT", "CORN", "WILD"], answer: "FLOWER", difficulty: 1, bonds: ["FLOWERPOT", "CORNFLOWER", "WILDFLOWER"] },  { items: ["SIDE", "CAR", "DEAD"], answer: "POOL", difficulty: 1, bonds: ["POOLSIDE", "CARPOOL", "DEADPOOL"] },  { items: ["LENGTH", "BRAIN", "MICRO"], answer: "WAVE", difficulty: 1, bonds: ["WAVELENGTH", "BRAINWAVE", "MICROWAVE"] },  { items: ["NUT", "MEDICINE", "HOPE"], answer: "CHEST", difficulty: 2, bonds: ["CHESTNUT", "MEDICINE CHEST", "HOPE CHEST"] },  { items: ["CHAIR", "PIT", "FIRE"], answer: "ARM", difficulty: 1, bonds: ["ARMCHAIR", "ARMPIT", "FIREARM"] },  { items: ["ROOM", "DOG", "PANT"], answer: "LEG", difficulty: 1, bonds: ["LEGROOM", "DOGLEG", "PANTLEG"] },  { items: ["BROW", "LID", "FISH"], answer: "EYE", difficulty: 1, bonds: ["EYEBROW", "EYELID", "FISHEYE"] },  { items: ["BLEED", "DIVE", "HARD"], answer: "NOSE", difficulty: 1, bonds: ["NOSEBLEED", "NOSEDIVE", "HARDNOSE"] },  { items: ["PASTE", "ACHE", "SWEET"], answer: "TOOTH", difficulty: 2, bonds: ["TOOTHPASTE", "TOOTHACHE", "SWEET TOOTH"] },  { items: ["LACE", "BOTTLE", "RUBBER"], answer: "NECK", difficulty: 1, bonds: ["NECKLACE", "BOTTLENECK", "RUBBERNECK"] },  { items: ["TABLE", "AROUND", "OVER"], answer: "TURN", difficulty: 1, bonds: ["TURNTABLE", "TURNAROUND", "OVERTURN"] },  { items: ["STILL", "OUT", "UNDER"], answer: "STAND", difficulty: 1, bonds: ["STANDSTILL", "STANDOUT", "UNDERSTAND"] },  { items: ["HOLDER", "BIRTH", "WORK"], answer: "PLACE", difficulty: 1, bonds: ["PLACEHOLDER", "BIRTHPLACE", "WORKPLACE"] },  { items: ["BACK", "BRIDGE", "WITH"], answer: "DRAW", difficulty: 1, bonds: ["DRAWBACK", "DRAWBRIDGE", "WITHDRAW"] },  { items: ["SET", "NEVER", "MASTER"], answer: "MIND", difficulty: 1, bonds: ["MINDSET", "NEVERMIND", "MASTERMIND"] },  { items: ["BREAK", "BEAT", "SWEET"], answer: "HEART", difficulty: 1, bonds: ["HEARTBREAK", "HEARTBEAT", "SWEETHEART"] },  { items: ["STORM", "WASH", "SCATTER"], answer: "BRAIN", difficulty: 1, bonds: ["BRAINSTORM", "BRAINWASH", "SCATTERBRAIN"] },  { items: ["HEAD", "BACK", "WISH"], answer: "BONE", difficulty: 1, bonds: ["BONEHEAD", "BACKBONE", "WISHBONE"] },  { items: ["SNAKE", "BUCK", "TIGHT"], answer: "SKIN", difficulty: 1, bonds: ["SNAKESKIN", "BUCKSKIN", "SKINTIGHT"] },  { items: ["WATER", "SHAKER", "ROCK"], answer: "SALT", difficulty: 1, bonds: ["SALTWATER", "SALTSHAKER", "ROCK SALT"] },  { items: ["CANE", "COAT", "BROWN"], answer: "SUGAR", difficulty: 2, bonds: ["SUGARCANE", "SUGARCOAT", "BROWN SUGAR"] },  { items: ["MINT", "CORN", "CHILI"], answer: "PEPPER", difficulty: 2, bonds: ["PEPPERMINT", "PEPPERCORN", "CHILI PEPPER"] },  { items: ["WINNER", "CRUMB", "CORN"], answer: "BREAD", difficulty: 1, bonds: ["BREADWINNER", "BREADCRUMB", "CORNBREAD"] },  { items: ["BURGER", "COTTAGE", "CREAM"], answer: "CHEESE", difficulty: 2, bonds: ["CHEESEBURGER", "COTTAGE CHEESE", "CREAM CHEESE"] },  { items: ["BALL", "LOAF", "SWEET"], answer: "MEAT", difficulty: 1, bonds: ["MEATBALL", "MEATLOAF", "SWEETMEAT"] },  { items: ["PAN", "APPLE", "SOY"], answer: "SAUCE", difficulty: 2, bonds: ["SAUCEPAN", "APPLESAUCE", "SOY SAUCE"] },  { items: ["CAKE", "TEA", "EGG"], answer: "CUP", difficulty: 1, bonds: ["CUPCAKE", "TEACUP", "EGGCUP"] },  { items: ["GLASS", "RED", "LIST"], answer: "WINE", difficulty: 2, bonds: ["WINEGLASS", "RED WINE", "WINE LIST"] },  { items: ["SIDE", "TOP", "DOWN"], answer: "HILL", difficulty: 1, bonds: ["HILLSIDE", "HILLTOP", "DOWNHILL"] },  { items: ["LORD", "FARM", "OVER"], answer: "LAND", difficulty: 1, bonds: ["LANDLORD", "FARMLAND", "OVERLAND"] },  { items: ["HOLE", "FOLIO", "TRANS"], answer: "PORT", difficulty: 1, bonds: ["PORTHOLE", "PORTFOLIO", "TRANSPORT"] },  { items: ["HEAD", "FOOT", "DRAW"], answer: "BRIDGE", difficulty: 1, bonds: ["BRIDGEHEAD", "FOOTBRIDGE", "DRAWBRIDGE"] },  { items: ["CHART", "OVER", "CASH"], answer: "FLOW", difficulty: 1, bonds: ["FLOWCHART", "OVERFLOW", "CASHFLOW"] },  { items: ["TEA", "FLOWER", "HOLE"], answer: "POT", difficulty: 1, bonds: ["TEAPOT", "FLOWERPOT", "POTHOLE"] },  { items: ["SHORT", "BACK", "HAIR"], answer: "CUT", difficulty: 1, bonds: ["SHORTCUT", "CUTBACK", "HAIRCUT"] },  { items: ["DRUM", "PAY", "SPRING"], answer: "ROLL", difficulty: 1, bonds: ["DRUMROLL", "PAYROLL", "SPRING ROLL"] },  { items: ["SUN", "BACK", "JET"], answer: "SET", difficulty: 1, bonds: ["SUNSET", "SETBACK", "JET SET"] },  { items: ["CLOTH", "TIME", "ROUND"], answer: "TABLE", difficulty: 1, bonds: ["TABLECLOTH", "TIMETABLE", "ROUNDTABLE"] },  { items: ["GUN", "BUCK", "SLAP"], answer: "SHOT", difficulty: 1, bonds: ["GUNSHOT", "BUCKSHOT", "SLAPSHOT"] },  { items: ["BROAD", "AWAY", "OVER"], answer: "CAST", difficulty: 1, bonds: ["BROADCAST", "CASTAWAY", "OVERCAST"] },  { items: ["FARE", "STAIR", "INK"], answer: "WELL", difficulty: 1, bonds: ["FAREWELL", "STAIRWELL", "INKWELL"] },  { items: ["LIGHT", "POINT", "MOB"], answer: "FLASH", difficulty: 2, bonds: ["FLASHLIGHT", "FLASHPOINT", "FLASH MOB"] },  { items: ["PASS", "KEY", "BY"], answer: "WORD", difficulty: 1, bonds: ["PASSWORD", "KEYWORD", "BYWORD"] },  { items: ["TOOTH", "POCKET", "ICE"], answer: "PICK", difficulty: 2, bonds: ["TOOTHPICK", "PICKPOCKET", "ICE PICK"] },  { items: ["DOM", "WAY", "CARE"], answer: "FREE", difficulty: 1, bonds: ["FREEDOM", "FREEWAY", "CAREFREE"] },  { items: ["STOCK", "OUT", "WIRE"], answer: "LIVE", difficulty: 1, bonds: ["LIVESTOCK", "OUTLIVE", "LIVEWIRE"] },  { items: ["TEEN", "UNDER", "MIDDLE"], answer: "AGE", difficulty: 1, bonds: ["TEENAGE", "UNDERAGE", "MIDDLE AGE"] },  { items: ["BOX", "POST", "FRONT"], answer: "OFFICE", difficulty: 2, bonds: ["BOX OFFICE", "POST OFFICE", "FRONT OFFICE"] },  { items: ["HOT", "BLIND", "LIGHT"], answer: "SPOT", difficulty: 1, bonds: ["HOTSPOT", "BLIND SPOT", "SPOTLIGHT"] },  { items: ["SHOT", "HAND", "MACHINE"], answer: "GUN", difficulty: 1, bonds: ["SHOTGUN", "HANDGUN", "MACHINE GUN"] },  { items: ["TRICK", "HARD", "TOP"], answer: "HAT", difficulty: 2, bonds: ["HAT TRICK", "HARD HAT", "TOP HAT"] },  { items: ["RAIN", "LONG", "CROSS"], answer: "BOW", difficulty: 1, bonds: ["RAINBOW", "LONGBOW", "CROSSBOW"] },  { items: ["AIR", "BI", "WAR"], answer: "PLANE", difficulty: 1, bonds: ["AIRPLANE", "BIPLANE", "WARPLANE"] },  { items: ["HORSE", "TRACK", "CAR"], answer: "RACE", difficulty: 2, bonds: ["HORSE RACE", "RACETRACK", "RACE CAR"] },  { items: ["DEAD", "DRUM", "OFF"], answer: "BEAT", difficulty: 1, bonds: ["DEADBEAT", "DRUMBEAT", "OFFBEAT"] },  { items: ["OVER", "WORLD", "INTER"], answer: "VIEW", difficulty: 1, bonds: ["OVERVIEW", "WORLDVIEW", "INTERVIEW"] },  { items: ["AIR", "FACE", "FORK"], answer: "LIFT", difficulty: 1, bonds: ["AIRLIFT", "FACELIFT", "FORKLIFT"] },  { items: ["ALARM", "WORK", "WISE"], answer: "CLOCK", difficulty: 2, bonds: ["ALARM CLOCK", "CLOCKWORK", "CLOCKWISE"] },  { items: ["SALES", "FORK", "BLACK"], answer: "PITCH", difficulty: 2, bonds: ["SALES PITCH", "PITCHFORK", "PITCH BLACK"] },  { items: ["WILD", "TIME", "AFTER"], answer: "LIFE", difficulty: 1, bonds: ["WILDLIFE", "LIFETIME", "AFTERLIFE"] },  { items: ["SHOW", "COUNT", "MELT"], answer: "DOWN", difficulty: 1, bonds: ["SHOWDOWN", "COUNTDOWN", "MELTDOWN"] },  { items: ["HEART", "OUT", "RAZOR"], answer: "BURN", difficulty: 2, bonds: ["HEARTBURN", "BURNOUT", "RAZOR BURN"] },  { items: ["BOMB", "EGG", "NUT"], answer: "SHELL", difficulty: 1, bonds: ["BOMBSHELL", "EGGSHELL", "NUTSHELL"] },  { items: ["TIME", "WORK", "DOOR"], answer: "FRAME", difficulty: 1, bonds: ["TIMEFRAME", "FRAMEWORK", "DOORFRAME"] },  { items: ["FIRE", "NEW", "NAME"], answer: "BRAND", difficulty: 2, bonds: ["FIREBRAND", "BRAND NEW", "BRAND NAME"] },  { items: ["ABOUT", "YEAR", "UP"], answer: "ROUND", difficulty: 1, bonds: ["ROUNDABOUT", "YEAR-ROUND", "ROUNDUP"] },  { items: ["FIRST", "WORLD", "MATE"], answer: "CLASS", difficulty: 2, bonds: ["FIRST CLASS", "WORLD CLASS", "CLASSMATE"] },  { items: ["MAIN", "WALL", "EASY"], answer: "STREET", difficulty: 2, bonds: ["MAIN STREET", "WALL STREET", "EASY STREET"] },  { items: ["AIR", "ROPE", "WATER"], answer: "TIGHT", difficulty: 1, bonds: ["AIRTIGHT", "TIGHTROPE", "WATERTIGHT"] },  { items: ["BULLET", "READ", "WATER"], answer: "PROOF", difficulty: 1, bonds: ["BULLETPROOF", "PROOFREAD", "WATERPROOF"] },  { items: ["HIGH", "BROAD", "GATE"], answer: "WAY", difficulty: 1, bonds: ["HIGHWAY", "BROADWAY", "GATEWAY"] },  { items: ["ROOM", "SIDE", "AFTER"], answer: "DARK", difficulty: 2, bonds: ["DARKROOM", "DARK SIDE", "AFTER DARK"] },  { items: ["WIDE", "MINDED", "AIR"], answer: "OPEN", difficulty: 2, bonds: ["WIDE OPEN", "OPEN-MINDED", "OPEN AIR"] },  { items: ["FREE", "OFF", "WIND"], answer: "TRADE", difficulty: 2, bonds: ["FREE TRADE", "TRADEOFF", "TRADE WIND"] },  { items: ["SHOT", "TIME", "WIG"], answer: "BIG", difficulty: 1, bonds: ["BIGSHOT", "BIG TIME", "BIGWIG"] },  { items: ["HUNGER", "OUT", "LIGHTNING"], answer: "STRIKE", difficulty: 2, bonds: ["HUNGER STRIKE", "STRIKEOUT", "LIGHTNING STRIKE"] },  { items: ["SHIP", "ROLLER", "ROOM"], answer: "STEAM", difficulty: 2, bonds: ["STEAMSHIP", "STEAMROLLER", "STEAM ROOM"] },  { items: ["HOME", "BED", "DAY"], answer: "SICK", difficulty: 2, bonds: ["HOMESICK", "SICKBED", "SICK DAY"] },  { items: ["WORLD", "WEAR", "SCORE"], answer: "UNDER", difficulty: 1, bonds: ["UNDERWORLD", "UNDERWEAR", "UNDERSCORE"] },  { items: ["BACK", "WAY", "HEARTED"], answer: "HALF", difficulty: 1, bonds: ["HALFBACK", "HALFWAY", "HALF-HEARTED"] },  { items: ["BREAK", "BALL", "FOOD"], answer: "FAST", difficulty: 1, bonds: ["BREAKFAST", "FASTBALL", "FAST FOOD"] },  { items: ["FIRE", "GOOSE", "WEST"], answer: "WILD", difficulty: 2, bonds: ["WILDFIRE", "WILD GOOSE", "WILD WEST"] },  { items: ["PAPER", "NATURE", "HAPPY"], answer: "TRAIL", difficulty: 2, bonds: ["PAPER TRAIL", "NATURE TRAIL", "HAPPY TRAIL"] },  { items: ["FOOT", "BACK", "GRIZZLY"], answer: "BARE", homophone: "BEAR", difficulty: 3, bonds: ["BAREFOOT", "BAREBACK", "GRIZZLY BEAR"] },  { items: ["FISH", "GARAGE", "YARD"], answer: "SAIL", homophone: "SALE", difficulty: 2, bonds: ["SAILFISH", "GARAGE SALE", "YARD SALE"] },  { items: ["COCK", "FAIRY", "TALL"], answer: "TAIL", homophone: "TALE", difficulty: 2, bonds: ["COCKTAIL", "FAIRY TALE", "TALL TALE"] },  { items: ["MILL", "WALL", "CORN"], answer: "FLOUR", homophone: "FLOWER", difficulty: 2, bonds: ["FLOUR MILL", "WALLFLOWER", "CORNFLOUR"] },  { items: ["HOOD", "STAND", "FORT"], answer: "KNIGHT", homophone: "NIGHT", difficulty: 2, bonds: ["KNIGHTHOOD", "NIGHTSTAND", "FORTNIGHT"] },  { items: ["DEER", "FOREST", "FREE"], answer: "REIN", homophone: "RAIN / REIGN", difficulty: 3, bonds: ["REINDEER", "RAINFOREST", "FREE REIN"] },  { items: ["WOLF", "JET", "FANNY"], answer: "PACK", difficulty: 1, bonds: ["WOLFPACK", "JETPACK", "FANNY PACK"] },  { items: ["WITCH", "WOOD", "AIR"], answer: "CRAFT", difficulty: 1, bonds: ["WITCHCRAFT", "WOODCRAFT", "AIRCRAFT"] },  { items: ["BORN", "COMER", "FOUND"], answer: "NEW", difficulty: 1, bonds: ["NEWBORN", "NEWCOMER", "NEWFOUND"] },  { items: ["BOUND", "CHECK", "DRY"], answer: "SPELL", difficulty: 2, bonds: ["SPELLBOUND", "SPELL CHECK", "DRY SPELL"] },  { items: ["WAY", "COUNTY", "VANITY"], answer: "FAIR", difficulty: 2, bonds: ["FAIRWAY", "COUNTY FAIR", "VANITY FAIR"] },  { items: ["TUBE", "BLOOD", "STRESS"], answer: "TEST", difficulty: 2, bonds: ["TEST TUBE", "BLOOD TEST", "STRESS TEST"] },  { items: ["JACK", "WASH", "GO"], answer: "CAR", difficulty: 1, bonds: ["CARJACK", "CARWASH", "CARGO"] },  { items: ["SHIP", "CYBER", "OUTER"], answer: "SPACE", difficulty: 1, bonds: ["SPACESHIP", "CYBERSPACE", "OUTER SPACE"] },  { items: ["LINE", "OFF", "IN"], answer: "SHORE", difficulty: 1, bonds: ["SHORELINE", "OFFSHORE", "INSHORE"] },  { items: ["PORT", "OVER", "TIME"], answer: "PASS", difficulty: 1, bonds: ["PASSPORT", "OVERPASS", "PASTIME"] },  { items: ["PILE", "ROOM", "OVER"], answer: "STOCK", difficulty: 1, bonds: ["STOCKPILE", "STOCKROOM", "OVERSTOCK"] },  { items: ["OVER", "OFF", "AWAY"], answer: "TAKE", difficulty: 1, bonds: ["OVERTAKE", "TAKEOFF", "TAKEAWAY"] },  { items: ["STREAM", "KNOT", "LAND"], answer: "SLIP", difficulty: 1, bonds: ["SLIPSTREAM", "SLIPKNOT", "LANDSLIP"] },  { items: ["DAY", "PLACE", "MARK"], answer: "BIRTH", difficulty: 1, bonds: ["BIRTHDAY", "BIRTHPLACE", "BIRTHMARK"] },  { items: ["PAPER", "LONG", "MID"], answer: "TERM", difficulty: 2, bonds: ["TERM PAPER", "LONG-TERM", "MIDTERM"] },  { items: ["LAND", "PIPE", "CATCHER"], answer: "DREAM", difficulty: 2, bonds: ["DREAMLAND", "PIPE DREAM", "DREAMCATCHER"] },  { items: ["BREAK", "COME", "CAST"], answer: "OUT", difficulty: 1, bonds: ["OUTBREAK", "OUTCOME", "OUTCAST"] },  { items: ["GOLF", "COUNTRY", "HOUSE"], answer: "CLUB", difficulty: 2, bonds: ["GOLF CLUB", "COUNTRY CLUB", "CLUBHOUSE"] },  { items: ["OUT", "BOOK", "DROP"], answer: "LET", difficulty: 1, bonds: ["OUTLET", "BOOKLET", "DROPLET"] },  { items: ["PIECE", "CLASS", "HEAD"], answer: "MASTER", difficulty: 1, bonds: ["MASTERPIECE", "MASTERCLASS", "HEADMASTER"] },  { items: ["BALL", "CAMP", "AIR"], answer: "BASE", difficulty: 1, bonds: ["BASEBALL", "BASECAMP", "AIRBASE"] },  { items: ["NIGHT", "DAY", "SUMMER"], answer: "MID", difficulty: 1, bonds: ["MIDNIGHT", "MIDDAY", "MIDSUMMER"] },  { items: ["GOLF", "CRASH", "RACE"], answer: "COURSE", difficulty: 2, bonds: ["GOLF COURSE", "CRASH COURSE", "RACECOURSE"] },  { items: ["PHONE", "CARD", "STREET"], answer: "SMART", difficulty: 2, bonds: ["SMARTPHONE", "SMART CARD", "STREET SMART"] },  { items: ["DOG", "BULL", "PRIZE"], answer: "FIGHT", difficulty: 1, bonds: ["DOGFIGHT", "BULLFIGHT", "PRIZEFIGHT"] },  { items: ["SMASH", "LIST", "MAN"], answer: "HIT", difficulty: 2, bonds: ["SMASH HIT", "HIT LIST", "HITMAN"] },  { items: ["OVER", "OUT", "BACK"], answer: "PULL", difficulty: 1, bonds: ["PULLOVER", "PULLOUT", "PULLBACK"] },  { items: ["CAKE", "HOUSE", "POT"], answer: "HOT", difficulty: 1, bonds: ["HOTCAKE", "HOTHOUSE", "HOTPOT"] },  { items: ["FLOOD", "CRASH", "TOLL"], answer: "GATE", difficulty: 1, bonds: ["FLOODGATE", "GATECRASH", "TOLLGATE"] },  { items: ["FIELD", "LAND", "SHAFT"], answer: "MINE", difficulty: 1, bonds: ["MINEFIELD", "LANDMINE", "MINESHAFT"] },  { items: ["KNEE", "SKULL", "HUB"], answer: "CAP", difficulty: 1, bonds: ["KNEECAP", "SKULLCAP", "HUBCAP"] },  { items: ["KICK", "OUT", "BACK"], answer: "DROP", difficulty: 1, bonds: ["DROPKICK", "DROPOUT", "BACKDROP"] },  { items: ["BLOOD", "BODY", "LESS"], answer: "COUNT", difficulty: 2, bonds: ["BLOOD COUNT", "BODY COUNT", "COUNTLESS"] },  { items: ["BOARD", "BLADE", "BACK"], answer: "SWITCH", difficulty: 1, bonds: ["SWITCHBOARD", "SWITCHBLADE", "SWITCHBACK"] },  { items: ["SHOT", "GINGER", "DRAGON"], answer: "SNAP", difficulty: 1, bonds: ["SNAPSHOT", "GINGERSNAP", "SNAPDRAGON"] },  { items: ["WIRE", "ROAD", "GUILT"], answer: "TRIP", difficulty: 2, bonds: ["TRIPWIRE", "ROAD TRIP", "GUILT TRIP"] },  { items: ["CAKE", "CHANGE", "CIRCUIT"], answer: "SHORT", difficulty: 2, bonds: ["SHORTCAKE", "SHORTCHANGE", "SHORT CIRCUIT"] },  { items: ["LINE", "PAGE", "WATER"], answer: "FRONT", difficulty: 2, bonds: ["FRONTLINE", "FRONT PAGE", "WATERFRONT"] },  { items: ["POST", "LANGUAGE", "STOP"], answer: "SIGN", difficulty: 2, bonds: ["SIGNPOST", "SIGN LANGUAGE", "STOP SIGN"] },  { items: ["BOOK", "GOLDEN", "HOME"], answer: "RULE", difficulty: 2, bonds: ["RULEBOOK", "GOLDEN RULE", "HOME RULE"] },  { items: ["CUT", "NECK", "GROUND"], answer: "CREW", difficulty: 2, bonds: ["CREW CUT", "CREWNECK", "GROUND CREW"] },  { items: ["HIGH", "WATER", "RIP"], answer: "TIDE", difficulty: 2, bonds: ["HIGH TIDE", "TIDEWATER", "RIPTIDE"] },  { items: ["WHILE", "NET", "SELF"], answer: "WORTH", difficulty: 2, bonds: ["WORTHWHILE", "NET WORTH", "SELF-WORTH"] },  { items: ["CUTTING", "KNIFE", "LEADING"], answer: "EDGE", difficulty: 2, bonds: ["CUTTING EDGE", "KNIFE-EDGE", "LEADING EDGE"] },  { items: ["EYE", "FOOT", "SWIM"], answer: "WEAR", difficulty: 1, bonds: ["EYEWEAR", "FOOTWEAR", "SWIMWEAR"] },  { items: ["TIME", "SQUARE", "TICKET"], answer: "MEAL", difficulty: 2, bonds: ["MEALTIME", "SQUARE MEAL", "MEAL TICKET"] },  { items: ["GUARD", "KEEPING", "CRACKER"], answer: "SAFE", difficulty: 1, bonds: ["SAFEGUARD", "SAFEKEEPING", "SAFECRACKER"] },  { items: ["LINE", "BAG", "WORK"], answer: "PIPE", difficulty: 1, bonds: ["PIPELINE", "BAGPIPE", "PIPEWORK"] },  { items: ["CURTAIN", "BIRD", "BACK"], answer: "CALL", difficulty: 2, bonds: ["CURTAIN CALL", "BIRDCALL", "CALLBACK"] },  { items: ["BOARD", "CARD", "HIGH"], answer: "SCORE", difficulty: 2, bonds: ["SCOREBOARD", "SCORECARD", "HIGH SCORE"] },  { items: ["MATE", "FOOD", "IN"], answer: "SOUL", homophone: "SOLE", difficulty: 2, bonds: ["SOULMATE", "SOUL FOOD", "INSOLE"] },  { items: ["BOX", "BLACK", "ALPHA"], answer: "MAIL", homophone: "MALE", difficulty: 2, bonds: ["MAILBOX", "BLACKMAIL", "ALPHA MALE"] },  { items: ["KEEPER", "CENTER", "MEAL"], answer: "PEACE", homophone: "PIECE", difficulty: 2, bonds: ["PEACEKEEPER", "CENTERPIECE", "PIECEMEAL"] },  { items: ["HOLDER", "OUT", "HOUSE"], answer: "STAKE", homophone: "STEAK", difficulty: 2, bonds: ["STAKEHOLDER", "STAKEOUT", "STEAKHOUSE"] },  { items: ["OFF", "GHOST", "HAND"], answer: "WRITE", homophone: "RIGHT / RITE", difficulty: 3, bonds: ["WRITE-OFF", "GHOSTWRITE", "RIGHT-HAND"] },  { items: ["HOW", "LEDGE", "BODY"], answer: "KNOW", homophone: "NO", difficulty: 2, bonds: ["KNOW-HOW", "KNOWLEDGE", "NOBODY"] },  { items: ["THING", "WHERE", "LUMP"], answer: "SOME", homophone: "SUM", difficulty: 2, bonds: ["SOMETHING", "SOMEWHERE", "LUMP SUM"] },  { items: ["MARK", "WAY", "OVER"], answer: "HALL", homophone: "HAUL", difficulty: 2, bonds: ["HALLMARK", "HALLWAY", "OVERHAUL"] },  { items: ["DEAD", "LIST", "PAPER"], answer: "WEIGHT", homophone: "WAIT", difficulty: 2, bonds: ["DEADWEIGHT", "WAITLIST", "PAPERWEIGHT"] },  { items: ["PIN", "SPRAY", "BRAINED"], answer: "HAIR", homophone: "HARE", difficulty: 2, bonds: ["HAIRPIN", "HAIRSPRAY", "HAREBRAINED"] },  { items: ["SHARK", "HOME", "SOME"], answer: "LOAN", homophone: "LONE", difficulty: 2, bonds: ["LOAN SHARK", "HOME LOAN", "LONESOME"] },  { items: ["LING", "END", "MID"], answer: "WEAK", homophone: "WEEK", difficulty: 2, bonds: ["WEAKLING", "WEEKEND", "MIDWEEK"] },  { items: ["UP", "HOME", "IN"], answer: "GROWN", homophone: "GROAN", difficulty: 2, bonds: ["GROWN-UP", "HOMEGROWN", "INGROWN"] },  { items: ["SPAN", "MAN", "TIP"], answer: "WING", difficulty: 1, bonds: ["WINGSPAN", "WINGMAN", "WINGTIP"] },  { items: ["DOM", "PIN", "FISHER"], answer: "KING", difficulty: 1, bonds: ["KINGDOM", "KINGPIN", "KINGFISHER"] },  { items: ["BIN", "PAN", "STAR"], answer: "DUST", difficulty: 1, bonds: ["DUSTBIN", "DUSTPAN", "STARDUST"] },  { items: ["BOARD", "FOLD", "PLAY"], answer: "BILL", difficulty: 1, bonds: ["BILLBOARD", "BILLFOLD", "PLAYBILL"] },  { items: ["OUT", "BLIND", "FOUR"], answer: "FOLD", difficulty: 1, bonds: ["FOLDOUT", "BLINDFOLD", "FOURFOLD"] },  { items: ["FACE", "WRITER", "PROTO"], answer: "TYPE", difficulty: 3, bonds: ["TYPEFACE", "TYPEWRITER", "PROTOTYPE"] },  { items: ["MATE", "PLAYER", "HOME"], answer: "TEAM", difficulty: 2, bonds: ["TEAMMATE", "TEAM PLAYER", "HOME TEAM"] },  { items: ["POT", "HARD", "LADY"], answer: "LUCK", difficulty: 2, bonds: ["POTLUCK", "HARD LUCK", "LADY LUCK"] },  { items: ["STONE", "POLE", "RED"], answer: "FLAG", difficulty: 1, bonds: ["FLAGSTONE", "FLAGPOLE", "RED FLAG"] },  { items: ["UP", "WORM", "LEFT"], answer: "HOOK", difficulty: 2, bonds: ["HOOKUP", "HOOKWORM", "LEFT HOOK"] },  { items: ["VENTURE", "BALL", "HIP"], answer: "JOINT", difficulty: 2, bonds: ["JOINT VENTURE", "BALL JOINT", "HIP JOINT"] },  { items: ["WITCH", "HEAD", "FOX"], answer: "HUNT", difficulty: 2, bonds: ["WITCH HUNT", "HEADHUNT", "FOX HUNT"] },  { items: ["JOY", "SHARE", "OVER"], answer: "RIDE", difficulty: 1, bonds: ["JOYRIDE", "RIDESHARE", "OVERRIDE"] },  { items: ["AGE", "MAN", "OUT"], answer: "POST", difficulty: 1, bonds: ["POSTAGE", "POSTMAN", "OUTPOST"] },  { items: ["HOUSE", "YARD", "HAND"], answer: "FARM", difficulty: 1, bonds: ["FARMHOUSE", "FARMYARD", "FARMHAND"] },  { items: ["EGG", "LOVE", "CROW"], answer: "NEST", difficulty: 2, bonds: ["NEST EGG", "LOVE NEST", "CROW'S NEST"] },  { items: ["IN", "MAN", "ART"], answer: "CAVE", difficulty: 2, bonds: ["CAVE-IN", "MAN CAVE", "CAVE ART"] },  { items: ["FORM", "NUMBER", "BOILER"], answer: "PLATE", difficulty: 3, bonds: ["PLATFORM", "NUMBER PLATE", "BOILERPLATE"] },  { items: ["BABY", "DOWN", "IN"], answer: "SIT", difficulty: 1, bonds: ["BABYSIT", "SIT-DOWN", "SIT-IN"] },  { items: ["CUFF", "CHAIN", "UP"], answer: "LINK", difficulty: 1, bonds: ["CUFFLINK", "CHAIN LINK", "LINKUP"] },  { items: ["BENCH", "WINE", "PRINTING"], answer: "PRESS", difficulty: 2, bonds: ["BENCH PRESS", "WINEPRESS", "PRINTING PRESS"] },  { items: ["PAD", "WORTHY", "BANK"], answer: "NOTE", difficulty: 1, bonds: ["NOTEPAD", "NOTEWORTHY", "BANKNOTE"] },  { items: ["MAKER", "ROAD", "MIND"], answer: "MAP", difficulty: 1, bonds: ["MAPMAKER", "ROADMAP", "MIND MAP"] },  { items: ["PIE", "BAR", "STAR"], answer: "CHART", difficulty: 2, bonds: ["PIE CHART", "BAR CHART", "STAR CHART"] },  { items: ["BUSTER", "CHAIN", "STUMBLING"], answer: "BLOCK", difficulty: 2, bonds: ["BLOCKBUSTER", "BLOCKCHAIN", "STUMBLING BLOCK"] },  { items: ["RUBBER", "FOOD", "DUTY"], answer: "STAMP", difficulty: 2, bonds: ["RUBBER STAMP", "FOOD STAMP", "STAMP DUTY"] },  { items: ["OUT", "HOME", "NORTH"], answer: "BOUND", difficulty: 1, bonds: ["OUTBOUND", "HOMEBOUND", "NORTHBOUND"] },  { items: ["CAGE", "EYE", "SPARE"], answer: "RIB", difficulty: 1, bonds: ["RIBCAGE", "RIB-EYE", "SPARE RIB"] },  { items: ["CAST", "PEA", "ESCAPE"], answer: "POD", difficulty: 2, bonds: ["PODCAST", "PEAPOD", "ESCAPE POD"] },  { items: ["WOOD", "TOOL", "BLOOD"], answer: "SHED", difficulty: 1, bonds: ["WOODSHED", "TOOLSHED", "BLOODSHED"] },  { items: ["WINNER", "MONEY", "BOOBY"], answer: "PRIZE", difficulty: 2, bonds: ["PRIZE WINNER", "PRIZE MONEY", "BOOBY PRIZE"] },  { items: ["HAND", "OLD", "HOUSE"], answer: "MAID", homophone: "MADE", difficulty: 2, bonds: ["HANDMAID", "OLD MAID", "HOUSEMAID"] },  { items: ["SLIP", "REEF", "GORDIAN"], answer: "KNOT", homophone: "NOT", difficulty: 3, bonds: ["SLIPKNOT", "REEF KNOT", "GORDIAN KNOT"] },  { items: ["PHONE", "PRISON", "FUEL"], answer: "CELL", homophone: "SELL", difficulty: 2, bonds: ["CELLPHONE", "PRISON CELL", "FUEL CELL"] },  { items: ["WORKS", "DRUM", "STAINLESS"], answer: "STEEL", homophone: "STEAL", difficulty: 3, bonds: ["STEELWORKS", "STEEL DRUM", "STAINLESS STEEL"] },  { items: ["CASE", "WELL", "WAY"], answer: "STAIR", homophone: "STARE", difficulty: 2, bonds: ["STAIRCASE", "STAIRWELL", "STAIRWAY"] },  { items: ["SEEING", "READING", "GUN"], answer: "SIGHT", homophone: "SITE", difficulty: 2, bonds: ["SIGHTSEEING", "SIGHT READING", "GUNSIGHT"] },  { items: ["FAIRY", "TALL", "FOLK"], answer: "TALE", homophone: "TAIL", difficulty: 2, bonds: ["FAIRY TALE", "TALL TALE", "FOLKTALE"] },  { items: ["SOME", "WHEAT", "HEARTED"], answer: "WHOLE", homophone: "HOLE", difficulty: 2, bonds: ["WHOLESOME", "WHOLE WHEAT", "WHOLEHEARTED"] },  { items: ["ACHILLES", "STILETTO", "HIGH"], answer: "HEEL", homophone: "HEAL", difficulty: 3, bonds: ["ACHILLES HEEL", "STILETTO HEEL", "HIGH HEEL"] },  { items: ["MULE", "FALLOW", "PARK"], answer: "DEER", homophone: "DEAR", difficulty: 3, bonds: ["MULE DEER", "FALLOW DEER", "DEER PARK"] },  { items: ["BEAN", "AIR", "SAND"], answer: "BAG", difficulty: 1, bonds: ["BEANBAG", "AIRBAG", "SANDBAG"] },  { items: ["FLOWER", "RIVER", "BUNK"], answer: "BED", difficulty: 1, bonds: ["FLOWERBED", "RIVERBED", "BUNK BED"] },  { items: ["TOM", "PLAY", "SCOUT"], answer: "BOY", difficulty: 1, bonds: ["TOMBOY", "PLAYBOY", "BOY SCOUT"] },  { items: ["LADY", "HUM", "BED"], answer: "BUG", difficulty: 1, bonds: ["LADYBUG", "HUMBUG", "BEDBUG"] },  { items: ["BOY", "HIDE", "BELL"], answer: "COW", difficulty: 1, bonds: ["COWBOY", "COWHIDE", "COWBELL"] },  { items: ["DEAD", "BOOK", "LOOSE"], answer: "END", difficulty: 2, bonds: ["DEAD END", "BOOKEND", "LOOSE END"] },  { items: ["LIGHT", "STATION", "NATURAL"], answer: "GAS", difficulty: 2, bonds: ["GASLIGHT", "GAS STATION", "NATURAL GAS"] },  { items: ["FATHER", "MOTHER", "DEMI"], answer: "GOD", difficulty: 3, bonds: ["GODFATHER", "GODMOTHER", "DEMIGOD"] },  { items: ["BUBBLE", "CHEWING", "DROP"], answer: "GUM", difficulty: 1, bonds: ["BUBBLEGUM", "CHEWING GUM", "GUMDROP"] },  { items: ["RADIO", "STRING", "LET"], answer: "HAM", difficulty: 1, bonds: ["HAM RADIO", "HAMSTRING", "HAMLET"] },  { items: ["HOP", "FLASK", "BONE"], answer: "HIP", difficulty: 2, bonds: ["HIP HOP", "HIP FLASK", "HIPBONE"] },  { items: ["GROUND", "HEDGE", "ROAD"], answer: "HOG", difficulty: 1, bonds: ["GROUNDHOG", "HEDGEHOG", "ROAD HOG"] },  { items: ["TRAFFIC", "STRAWBERRY", "SESSION"], answer: "JAM", difficulty: 2, bonds: ["TRAFFIC JAM", "STRAWBERRY JAM", "JAM SESSION"] },  { items: ["OUT", "SUIT", "MAKER"], answer: "LAW", difficulty: 1, bonds: ["OUTLAW", "LAWSUIT", "LAWMAKER"] },  { items: ["OFF", "OUT", "OVER"], answer: "LAY", difficulty: 1, bonds: ["LAYOFF", "LAYOUT", "OVERLAY"] },  { items: ["STICK", "READ", "SYNC"], answer: "LIP", difficulty: 1, bonds: ["LIPSTICK", "LIP-READ", "LIP SYNC"] },  { items: ["MAN", "HOUSE", "LIBS"], answer: "MAD", difficulty: 1, bonds: ["MADMAN", "MADHOUSE", "MAD LIBS"] },  { items: ["DOOR", "WELCOME", "COM"], answer: "MAT", difficulty: 1, bonds: ["DOORMAT", "WELCOME MAT", "COMBAT"] },  { items: ["SLIDE", "FLAP", "PIE"], answer: "MUD", difficulty: 1, bonds: ["MUDSLIDE", "MUDFLAP", "MUD PIE"] },  { items: ["CAT", "KID", "POWER"], answer: "NAP", difficulty: 1, bonds: ["CATNAP", "KIDNAP", "POWER NAP"] },  { items: ["PEA", "SHELL", "DOUGH"], answer: "NUT", difficulty: 1, bonds: ["PEANUT", "NUTSHELL", "DOUGHNUT"] },  { items: ["LAUNCH", "LILY", "SCRATCH"], answer: "PAD", difficulty: 1, bonds: ["LAUNCHPAD", "LILY PAD", "SCRATCHPAD"] },  { items: ["SAUCE", "FRYING", "PETER"], answer: "PAN", difficulty: 2, bonds: ["SAUCEPAN", "FRYING PAN", "PETER PAN"] },  { items: ["DAY", "CHECK", "UNDER"], answer: "PAY", difficulty: 1, bonds: ["PAYDAY", "PAYCHECK", "UNDERPAY"] },  { items: ["PLAY", "PAL", "FOUNTAIN"], answer: "PEN", difficulty: 2, bonds: ["PLAYPEN", "PEN PAL", "FOUNTAIN PEN"] },  { items: ["MAG", "CUSTARD", "HUMBLE"], answer: "PIE", difficulty: 2, bonds: ["MAGPIE", "CUSTARD PIE", "HUMBLE PIE"] },  { items: ["ROLLING", "BOBBY", "SAFETY"], answer: "PIN", difficulty: 2, bonds: ["ROLLING PIN", "BOBBY PIN", "SAFETY PIN"] },  { items: ["ARM", "STOP", "SAND"], answer: "PIT", difficulty: 1, bonds: ["ARMPIT", "PIT STOP", "SANDPIT"] },  { items: ["RACE", "TRAP", "PACK"], answer: "RAT", difficulty: 2, bonds: ["RAT RACE", "RATTRAP", "RAT PACK"] },  { items: ["X", "MANTA", "SUN"], answer: "RAY", difficulty: 3, bonds: ["X-RAY", "MANTA RAY", "SUNRAY"] },  { items: ["LIGHTNING", "RAM", "HOT"], answer: "ROD", difficulty: 2, bonds: ["LIGHTNING ROD", "RAMROD", "HOT ROD"] },  { items: ["DEATH", "BOAT", "SKID"], answer: "ROW", difficulty: 2, bonds: ["DEATH ROW", "ROWBOAT", "SKID ROW"] },  { items: ["JIG", "SEE", "HACK"], answer: "SAW", difficulty: 1, bonds: ["JIGSAW", "SEESAW", "HACKSAW"] },  { items: ["SCRAPER", "LARK", "ROCKET"], answer: "SKY", difficulty: 3, bonds: ["SKYSCRAPER", "SKYLARK", "SKYROCKET"] },  { items: ["WIRE", "ROOM", "DANCE"], answer: "TAP", difficulty: 1, bonds: ["WIRETAP", "TAPROOM", "TAP DANCE"] },  { items: ["MAC", "TAN", "GET"], answer: "TAR", difficulty: 1, bonds: ["TARMAC", "TARTAN", "TARGET"] },  { items: ["PAYER", "RETURN", "OVER"], answer: "TAX", difficulty: 1, bonds: ["TAXPAYER", "TAX RETURN", "OVERTAX"] },  { items: ["FOIL", "CAN", "OPENER"], answer: "TIN", difficulty: 2, bonds: ["TINFOIL", "TIN CAN", "TIN OPENER"] },  { items: ["COB", "SITE", "SPIDER"], answer: "WEB", difficulty: 1, bonds: ["COBWEB", "WEBSITE", "SPIDERWEB"] },  { items: ["HALF", "DIM", "NIT"], answer: "WIT", difficulty: 1, bonds: ["HALFWIT", "DIMWIT", "NITWIT"] },
+
+  { items: ["JUGULAR","VARICOSE","WEATHER"], answer: "VEIN", homophone: "VAIN / VANE", difficulty: 3, bonds: ["JUGULAR VEIN","VARICOSE VEIN","WEATHER VANE"] },
+  { items: ["KILLER","NUMBER","PORT"], answer: "SERIAL", homophone: "CEREAL", difficulty: 3, bonds: ["SERIAL KILLER","SERIAL NUMBER","SERIAL PORT"] },
+  { items: ["GOLD","SILVER","BRONZE"], answer: "MEDAL", homophone: "MEDDLE", difficulty: 3, bonds: ["GOLD MEDAL","SILVER MEDAL","BRONZE MEDAL"] },
+  { items: ["SPINAL","VOCAL","EXTENSION"], answer: "CORD", homophone: "CHORD", difficulty: 3, bonds: ["SPINAL CORD","VOCAL CORD","EXTENSION CORD"] },
+  { items: ["BASE","BATTLE","OFFICER"], answer: "NAVAL", homophone: "NAVEL", difficulty: 3, bonds: ["NAVAL BASE","NAVAL BATTLE","NAVAL OFFICER"] },
+  { items: ["CAR","MEMORY","MAN"], answer: "MUSCLE", homophone: "MUSSEL", difficulty: 3, bonds: ["MUSCLE CAR","MUSCLE MEMORY","MUSCLE MAN"] },
+  { items: ["BOY","PIECE","HIGH"], answer: "ALTAR", homophone: "ALTER", difficulty: 3, bonds: ["ALTAR BOY","ALTARPIECE","HIGH ALTAR"] },
+  { items: ["PIANO","PLAN","OBJECT"], answer: "LESSON", homophone: "LESSEN", difficulty: 3, bonds: ["PIANO LESSON","LESSON PLAN","OBJECT LESSON"] },
+  { items: ["LINE","BAND","HIGH"], answer: "WAIST", homophone: "WASTE", difficulty: 3, bonds: ["WAISTLINE","WAISTBAND","HIGH WAIST"] },
+  { items: ["SILVER","POUND","EFFORT"], answer: "STERLING", difficulty: 3, bonds: ["STERLING SILVER","POUND STERLING","STERLING EFFORT"] },
+  { items: ["TRIANGLE","SHORTS","ONION"], answer: "BERMUDA", difficulty: 3, bonds: ["BERMUDA TRIANGLE","BERMUDA SHORTS","BERMUDA ONION"] },
+  { items: ["MENACE","LIMB","PAIN"], answer: "PHANTOM", difficulty: 3, bonds: ["PHANTOM MENACE","PHANTOM LIMB","PHANTOM PAIN"] },
+  { items: ["EFFECT","STROKE","KNIFE"], answer: "BUTTERFLY", difficulty: 3, bonds: ["BUTTERFLY EFFECT","BUTTERFLY STROKE","BUTTERFLY KNIFE"] },
+  { items: ["CAKE","CARD","HAPPY"], answer: "BIRTHDAY", difficulty: 3, bonds: ["BIRTHDAY CAKE","BIRTHDAY CARD","HAPPY BIRTHDAY"] },
+  { items: ["RIVER","PRIME","JUNGLE"], answer: "AMAZON", difficulty: 3, bonds: ["AMAZON RIVER","AMAZON PRIME","AMAZON JUNGLE"] },
+  { items: ["POLICE","CALL","SONG"], answer: "SIREN", difficulty: 3, bonds: ["POLICE SIREN","SIREN CALL","SIREN SONG"] },
+  { items: ["GAS","SEED","YELLOW"], answer: "MUSTARD", difficulty: 3, bonds: ["MUSTARD GAS","MUSTARD SEED","YELLOW MUSTARD"] },
+  { items: ["PILOT","ATTACK","COCKTAIL"], answer: "KAMIKAZE", difficulty: 3, bonds: ["KAMIKAZE PILOT","KAMIKAZE ATTACK","KAMIKAZE COCKTAIL"] },
+  { items: ["CAR","WINE","YEAR"], answer: "VINTAGE", difficulty: 3, bonds: ["VINTAGE CAR","VINTAGE WINE","VINTAGE YEAR"] },
+  { items: ["HANDLEBAR","PENCIL","WALRUS"], answer: "MOUSTACHE", difficulty: 3, bonds: ["HANDLEBAR MOUSTACHE","PENCIL MOUSTACHE","WALRUS MOUSTACHE"] },
+  { items: ["CITY","CEILING","ORGAN"], answer: "CATHEDRAL", difficulty: 3, bonds: ["CATHEDRAL CITY","CATHEDRAL CEILING","CATHEDRAL ORGAN"] },
+  { items: ["DISH","TV","TOWN"], answer: "SATELLITE", difficulty: 3, bonds: ["SATELLITE DISH","SATELLITE TV","SATELLITE TOWN"] },
+  { items: ["PUZZLE","CLUE","DAILY"], answer: "CROSSWORD", difficulty: 3, bonds: ["CROSSWORD PUZZLE","CROSSWORD CLUE","DAILY CROSSWORD"] },
+  { items: ["EXPERT","TRAVELER","LEATHER"], answer: "ARMCHAIR", difficulty: 3, bonds: ["ARMCHAIR EXPERT","ARMCHAIR TRAVELER","LEATHER ARMCHAIR"] },
+  { items: ["CHARGE","FITTING","FIXED"], answer: "BAYONET", difficulty: 3, bonds: ["BAYONET CHARGE","BAYONET FITTING","FIXED BAYONET"] },
+
+  { items: ["BOLT","SPEED","BUG"], answer: "LIGHTNING", difficulty: 3, bonds: ["LIGHTNING BOLT","LIGHTNING SPEED","LIGHTNING BUG"] },
+  { items: ["CLOCK","CRYSTAL","ROSE"], answer: "QUARTZ", difficulty: 3, bonds: ["QUARTZ CLOCK","QUARTZ CRYSTAL","ROSE QUARTZ"] },
+  { items: ["REVOLUTION","ROPE","UNDERGROUND"], answer: "VELVET", difficulty: 3, bonds: ["VELVET REVOLUTION","VELVET ROPE","VELVET UNDERGROUND"] },
+  { items: ["SCANDAL","HOTEL","COMPLEX"], answer: "WATERGATE", difficulty: 3, bonds: ["WATERGATE SCANDAL","WATERGATE HOTEL","WATERGATE COMPLEX"] },
+  { items: ["HORSE","WAR","VIRUS"], answer: "TROJAN", difficulty: 3, bonds: ["TROJAN HORSE","TROJAN WAR","TROJAN VIRUS"] },
+  { items: ["MAN","RUNNER","BOSTON"], answer: "MARATHON", difficulty: 3, bonds: ["MARATHON MAN","MARATHON RUNNER","BOSTON MARATHON"] },
+  { items: ["PARENT","PILOT","ATTACK"], answer: "HELICOPTER", difficulty: 3, bonds: ["HELICOPTER PARENT","HELICOPTER PILOT","ATTACK HELICOPTER"] },
+  { items: ["WESTERN","JUNCTION","BOLOGNESE"], answer: "SPAGHETTI", difficulty: 3, bonds: ["SPAGHETTI WESTERN","SPAGHETTI JUNCTION","SPAGHETTI BOLOGNESE"] },
+  { items: ["OIL","MEDIA","BUSINESS"], answer: "TYCOON", difficulty: 3, bonds: ["OIL TYCOON","MEDIA TYCOON","BUSINESS TYCOON"] },
+  { items: ["WARNING","ALLEY","WATCH"], answer: "TORNADO", difficulty: 3, bonds: ["TORNADO WARNING","TORNADO ALLEY","TORNADO WATCH"] },
+  { items: ["LAMP","FORCE","SEASON"], answer: "HURRICANE", difficulty: 3, bonds: ["HURRICANE LAMP","HURRICANE FORCE","HURRICANE SEASON"] },
+  { items: ["OIL","SEEDS","WILD"], answer: "SUNFLOWER", difficulty: 3, bonds: ["SUNFLOWER OIL","SUNFLOWER SEEDS","WILD SUNFLOWER"] },
+  { items: ["BOWL","POND","MEMORY"], answer: "GOLDFISH", difficulty: 3, bonds: ["GOLDFISH BOWL","GOLDFISH POND","GOLDFISH MEMORY"] },
+  { items: ["BLONDE","FIELDS","SHORTCAKE"], answer: "STRAWBERRY", difficulty: 3, bonds: ["STRAWBERRY BLONDE","STRAWBERRY FIELDS","STRAWBERRY SHORTCAKE"] },
+  { items: ["PHONE","PIE","BUSH"], answer: "BLACKBERRY", difficulty: 3, bonds: ["BLACKBERRY PHONE","BLACKBERRY PIE","BLACKBERRY BUSH"] },
+  { items: ["PI","BERET","RIPPLE"], answer: "RASPBERRY", difficulty: 3, bonds: ["RASPBERRY PI","RASPBERRY BERET","RASPBERRY RIPPLE"] },
+  { items: ["MUFFIN","PANCAKE","HILL"], answer: "BLUEBERRY", difficulty: 3, bonds: ["BLUEBERRY MUFFIN","BLUEBERRY PANCAKE","BLUEBERRY HILL"] },
+  { items: ["FEVER","LETTER","WOMAN"], answer: "SCARLET", difficulty: 3, bonds: ["SCARLET FEVER","SCARLET LETTER","SCARLET WOMAN"] },
+  { items: ["COAST","TOWER","KEYS"], answer: "IVORY", difficulty: 3, bonds: ["IVORY COAST","IVORY TOWER","IVORY KEYS"] },
+  { items: ["ROSE","MORAL","POINTS"], answer: "COMPASS", difficulty: 3, bonds: ["COMPASS ROSE","MORAL COMPASS","COMPASS POINTS"] },
+  { items: ["RISING","FREDDIE","PLANET"], answer: "MERCURY", difficulty: 3, bonds: ["MERCURY RISING","FREDDIE MERCURY","PLANET MERCURY"] },
+  { items: ["ROLL","BUN","STICK"], answer: "CINNAMON", difficulty: 3, bonds: ["CINNAMON ROLL","CINNAMON BUN","CINNAMON STICK"] },
+  { items: ["CAT","JAR","SANDWICH"], answer: "MARMALADE", difficulty: 3, bonds: ["MARMALADE CAT","MARMALADE JAR","MARMALADE SANDWICH"] },
+  { items: ["LADY","MAN","STICK"], answer: "LOLLIPOP", difficulty: 3, bonds: ["LOLLIPOP LADY","LOLLIPOP MAN","LOLLIPOP STICK"] },
+  { items: ["RING","JUBILEE","BASEBALL"], answer: "DIAMOND", difficulty: 3, bonds: ["DIAMOND RING","DIAMOND JUBILEE","BASEBALL DIAMOND"] },
+  { items: ["OVER","BE","IN"], answer: "COME", difficulty: 3, bonds: ["OVERCOME","BECOME","INCOME"] },
+  { items: ["UNI","PER","IN"], answer: "FORM", difficulty: 3, bonds: ["UNIFORM","PERFORM","INFORM"] },
+  { items: ["CON","RE","BE"], answer: "QUEST", difficulty: 3, bonds: ["CONQUEST","REQUEST","BEQUEST"] },
+  { items: ["MANU","POST","SUPER"], answer: "SCRIPT", difficulty: 3, bonds: ["MANUSCRIPT","POSTSCRIPT","SUPERSCRIPT"] },
+  { items: ["AD","PRE","IN"], answer: "VENT", difficulty: 3, bonds: ["ADVENT","PREVENT","INVENT"] },
+  { items: ["UNI","RE","AD"], answer: "VERSE", difficulty: 3, bonds: ["UNIVERSE","REVERSE","ADVERSE"] },
+  { items: ["DI","PRO","TELE"], answer: "VISION", difficulty: 3, bonds: ["DIVISION","PROVISION","TELEVISION"] },
+  { items: ["AT","IN","EX"], answer: "TEND", difficulty: 3, bonds: ["ATTEND","INTEND","EXTEND"] },
+  { items: ["RECT","QUAD","STR"], answer: "ANGLE", difficulty: 3, bonds: ["RECTANGLE","QUADRANGLE","STRANGLE"] },
+  { items: ["CON","VIA","DE"], answer: "DUCT", difficulty: 3, bonds: ["CONDUCT","VIADUCT","DEDUCT"] },
+  { items: ["UP","DOWN","RETRO"], answer: "GRADE", difficulty: 3, bonds: ["UPGRADE","DOWNGRADE","RETROGRADE"] },
+  { items: ["CON","PRO","RE"], answer: "TRACT", difficulty: 3, bonds: ["CONTRACT","PROTRACT","RETRACT"] },
+  { items: ["TRANS","E","RE"], answer: "LATE", difficulty: 3, bonds: ["TRANSLATE","ELATE","RELATE"] },
+  { items: ["OVER","UNDER","GEN"], answer: "RATE", difficulty: 3, bonds: ["OVERRATE","UNDERRATE","GENERATE"] },
+  { items: ["NON","COMMON","SIXTH"], answer: "SENSE", difficulty: 3, bonds: ["NONSENSE","COMMON SENSE","SIXTH SENSE"] },
+  { items: ["FREE","LONG","DRIVING"], answer: "RANGE", difficulty: 3, bonds: ["FREE RANGE","LONG RANGE","DRIVING RANGE"] },
+  { items: ["NEWS","DROP","SHEET"], answer: "ANCHOR", difficulty: 3, bonds: ["NEWS ANCHOR","DROP ANCHOR","SHEET ANCHOR"] },
+  { items: ["SOLAR","LUNAR","TOTAL"], answer: "ECLIPSE", difficulty: 3, bonds: ["SOLAR ECLIPSE","LUNAR ECLIPSE","TOTAL ECLIPSE"] },
+  { items: ["FILING","MEDICINE","SHADOW"], answer: "CABINET", difficulty: 3, bonds: ["FILING CABINET","MEDICINE CABINET","SHADOW CABINET"] },
+  { items: ["PIT","STRING","FULL"], answer: "ORCHESTRA", difficulty: 3, bonds: ["ORCHESTRA PIT","STRING ORCHESTRA","FULL ORCHESTRA"] },
+  { items: ["TIME","GRANDFATHER","ZENO"], answer: "PARADOX", difficulty: 3, bonds: ["TIME PARADOX","GRANDFATHER PARADOX","ZENO'S PARADOX"] },
+  { items: ["ALERT","FOSSIL","WAVES"], answer: "AMBER", difficulty: 3, bonds: ["AMBER ALERT","AMBER FOSSIL","AMBER WAVES"] },
+  { items: ["BOARD","PROPERTY","MONEY"], answer: "MONOPOLY", difficulty: 3, bonds: ["MONOPOLY BOARD","MONOPOLY PROPERTY","MONOPOLY MONEY"] },
+  { items: ["RIDE","CRUISE","RIO"], answer: "CARNIVAL", difficulty: 3, bonds: ["CARNIVAL RIDE","CARNIVAL CRUISE","RIO CARNIVAL"] },
+  { items: ["PHOTO","PARK","SUIT"], answer: "SAFARI", difficulty: 3, bonds: ["PHOTO SAFARI","SAFARI PARK","SAFARI SUIT"] },
+  { items: ["MICRO","TELE","HORO"], answer: "SCOPE", difficulty: 3, bonds: ["MICROSCOPE","TELESCOPE","HOROSCOPE"] },
+  { items: ["FORE","OVER","EYE"], answer: "SHADOW", difficulty: 3, bonds: ["FORESHADOW","OVERSHADOW","EYE SHADOW"] },
+  { items: ["MIS","MAL","RE"], answer: "TREAT", difficulty: 3, bonds: ["MISTREAT","MALTREAT","RETREAT"] },
+  { items: ["CON","DE","IN"], answer: "STRUCT", difficulty: 3, bonds: ["CONSTRUCT","DESTRUCT","INSTRUCT"] },
+  { items: ["RE","DIS","AB"], answer: "SOLVE", difficulty: 3, bonds: ["RESOLVE","DISSOLVE","ABSOLVE"] },
+  { items: ["A","DE","TRAN"], answer: "SCEND", difficulty: 3, bonds: ["ASCEND","DESCEND","TRANSCEND"] },
+  { items: ["EM","AS","EX"], answer: "PIRE", difficulty: 3, bonds: ["EMPIRE","ASPIRE","EXPIRE"] },
+  { items: ["IN","EX","CON"], answer: "CLUDE", difficulty: 3, bonds: ["INCLUDE","EXCLUDE","CONCLUDE"] },
+  { items: ["PRO","IN","DE"], answer: "DUCE", difficulty: 3, bonds: ["PRODUCE","INDUCE","DEDUCE"] },
+  { items: ["RE","COL","E"], answer: "LAPSE", difficulty: 3, bonds: ["RELAPSE","COLLAPSE","ELAPSE"] },
+  { items: ["TRI","DU","SIM"], answer: "PLEX", difficulty: 3, bonds: ["TRIPLEX","DUPLEX","SIMPLEX"] },
+  { items: ["DIS","EX","AC"], answer: "CLAIM", difficulty: 3, bonds: ["DISCLAIM","EXCLAIM","ACCLAIM"] },
+  { items: ["COM","EX","IM"], answer: "POSE", difficulty: 3, bonds: ["COMPOSE","EXPOSE","IMPOSE"] },
+  { items: ["DUMB","CON","PRO"], answer: "FOUND", difficulty: 3, bonds: ["DUMBFOUND","CONFOUND","PROFOUND"] },
+  { items: ["OVER","SUR","DIS"], answer: "CHARGE", difficulty: 3, bonds: ["OVERCHARGE","SURCHARGE","DISCHARGE"] },
+  { items: ["FORE","AFTER","FREE"], answer: "THOUGHT", difficulty: 3, bonds: ["FORETHOUGHT","AFTERTHOUGHT","FREETHOUGHT"] },
+  { items: ["IN","CON","AF"], answer: "FLICT", difficulty: 3, bonds: ["INFLICT","CONFLICT","AFFLICT"] },
+  { items: ["FRIEND","COMFORT","TWILIGHT"], answer: "ZONE", difficulty: 3, bonds: ["FRIEND ZONE","COMFORT ZONE","TWILIGHT ZONE"] },
+  { items: ["CONSPIRACY","MUSIC","GAME"], answer: "THEORY", difficulty: 3, bonds: ["CONSPIRACY THEORY","MUSIC THEORY","GAME THEORY"] },
+  { items: ["PIPE","BARREL","MOUTH"], answer: "ORGAN", difficulty: 3, bonds: ["PIPE ORGAN","BARREL ORGAN","MOUTH ORGAN"] },
+  { items: ["IRON","BAMBOO","SHOWER"], answer: "CURTAIN", difficulty: 3, bonds: ["IRON CURTAIN","BAMBOO CURTAIN","SHOWER CURTAIN"] },
+  { items: ["BASS","SNARE","WAR"], answer: "DRUM", difficulty: 3, bonds: ["BASS DRUM","SNARE DRUM","WAR DRUM"] },
+  { items: ["CHAT","ROAD","TALK"], answer: "SHOW", difficulty: 3, bonds: ["CHAT SHOW","ROAD SHOW","TALK SHOW"] },
+  { items: ["DEAD","EYE","THUNDER"], answer: "BOLT", difficulty: 3, bonds: ["DEADBOLT","EYEBOLT","THUNDERBOLT"] },
+  { items: ["GOLDEN","GREY","MOTHER"], answer: "GOOSE", difficulty: 3, bonds: ["GOLDEN GOOSE","GREY GOOSE","MOTHER GOOSE"] },
+  { items: ["MICRO","WOOD","BLUE"], answer: "CHIP", difficulty: 1, bonds: ["MICROCHIP","WOODCHIP","BLUE CHIP"] },
+  { items: ["HONEY","MASON","COOKIE"], answer: "JAR", difficulty: 1, bonds: ["HONEY JAR","MASON JAR","COOKIE JAR"] },
+  { items: ["LOVE","BACK","HOT"], answer: "SEAT", difficulty: 1, bonds: ["LOVE SEAT","BACKSEAT","HOT SEAT"] },
+  { items: ["CABIN","BOOK","JAM"], answer: "LOG", difficulty: 1, bonds: ["LOG CABIN","LOGBOOK","LOG JAM"] },
+  { items: ["BATH","WASH","HOT"], answer: "TUB", difficulty: 1, bonds: ["BATHTUB","WASHTUB","HOT TUB"] },
+  { items: ["STONE","FIRE","GREAT"], answer: "WALL", difficulty: 1, bonds: ["STONE WALL","FIREWALL","GREAT WALL"] },
+  { items: ["SWAN","SALT","CRATER"], answer: "LAKE", difficulty: 1, bonds: ["SWAN LAKE","SALT LAKE","CRATER LAKE"] },
+  { items: ["PAPER","HAIR","VIDEO"], answer: "CLIP", difficulty: 1, bonds: ["PAPERCLIP","HAIR CLIP","VIDEO CLIP"] },
+  { items: ["WEST","EAST","GOLD"], answer: "COAST", difficulty: 1, bonds: ["WEST COAST","EAST COAST","GOLD COAST"] },
+  { items: ["HORN","BANK","BOUND"], answer: "FOG", difficulty: 1, bonds: ["FOGHORN","FOG BANK","FOGBOUND"] },
+  { items: ["SPEAR","FRESH","ROYAL"], answer: "MINT", difficulty: 2, bonds: ["SPEARMINT","FRESH MINT","ROYAL MINT"] },
+  { items: ["MATE","CAP","OUT"], answer: "FLAT", difficulty: 2, bonds: ["FLATMATE","FLAT CAP","FLAT OUT"] },
+  { items: ["FRENCH","RACK","MELBA"], answer: "TOAST", difficulty: 2, bonds: ["FRENCH TOAST","TOAST RACK","MELBA TOAST"] },
+  { items: ["JEWELS","COURT","GREEN"], answer: "CROWN", difficulty: 2, bonds: ["CROWN JEWELS","CROWN COURT","CROWN GREEN"] },
+  { items: ["DOLL","TIME","TRADE"], answer: "RAG", difficulty: 2, bonds: ["RAG DOLL","RAGTIME","RAG TRADE"] },
+  { items: ["TOP","CIRCLE","CASH"], answer: "CROP", difficulty: 2, bonds: ["CROP TOP","CROP CIRCLE","CASH CROP"] },
+  { items: ["EYE","CABBAGE","ROUGH"], answer: "PATCH", difficulty: 2, bonds: ["EYE PATCH","CABBAGE PATCH","ROUGH PATCH"] },
+  { items: ["WOOD","CONTINENTAL","NET"], answer: "DRIFT", difficulty: 2, bonds: ["DRIFTWOOD","CONTINENTAL DRIFT","DRIFT NET"] },
+  { items: ["COD","FEAR","HORN"], answer: "CAPE", difficulty: 3, bonds: ["CAPE COD","CAPE FEAR","CAPE HORN"] },
+  { items: ["EX","IM","DE"], answer: "PLORE", difficulty: 3, bonds: ["EXPLORE","IMPLORE","DEPLORE"] },
+  { items: ["PRO","RE","DI"], answer: "GRESS", difficulty: 3, bonds: ["PROGRESS","REGRESS","DIGRESS"] },
+  { items: ["RE","IN","DE"], answer: "FLECT", difficulty: 3, bonds: ["REFLECT","INFLECT","DEFLECT"] },
+  { items: ["MON","OVER","M"], answer: "ARCH", difficulty: 3, bonds: ["MONARCH","OVERARCH","MARCH"] },
+  { items: ["PER","RE","ADOLES"], answer: "CENT", difficulty: 3, bonds: ["PERCENT","RECENT","ADOLESCENT"] },
+  { items: ["DE","IM","COUNTER"], answer: "PART", difficulty: 3, bonds: ["DEPART","IMPART","COUNTERPART"] },
+  { items: ["GUINEA","BANK","PEN"], answer: "PIG", difficulty: 1, bonds: ["GUINEA PIG","PIGGY BANK","PIG PEN"] },
+  { items: ["FINGER","FELT","FILTER"], answer: "TIP", difficulty: 1, bonds: ["FINGERTIP","FELT TIP","FILTER TIP"] },
+  { items: ["SKINNY","LUCKY","DOUBLE"], answer: "DIP", difficulty: 1, bonds: ["SKINNY DIP","LUCKY DIP","DOUBLE DIP"] },
+  { items: ["STAR","QUIZ","UP"], answer: "POP", difficulty: 1, bonds: ["POP STAR","POP QUIZ","POP UP"] },
+  { items: ["CODE","LINE","UP"], answer: "ZIP", difficulty: 1, bonds: ["ZIP CODE","ZIPLINE","ZIP UP"] },
+  { items: ["GROUND","DANCE","SHOP"], answer: "FLOOR", difficulty: 1, bonds: ["GROUND FLOOR","DANCE FLOOR","SHOP FLOOR"] },
+  { items: ["SAFETY","GREEN","SEAT"], answer: "BELT", difficulty: 1, bonds: ["SAFETY BELT","GREEN BELT","SEAT BELT"] },
+  { items: ["THINK","FISH","FUEL"], answer: "TANK", difficulty: 1, bonds: ["THINK TANK","FISH TANK","FUEL TANK"] },
+  { items: ["POST","SHADE","OIL"], answer: "LAMP", difficulty: 1, bonds: ["LAMPPOST","LAMPSHADE","OIL LAMP"] },
+  { items: ["CAR","LEG","STRAP"], answer: "BOOT", difficulty: 1, bonds: ["CAR BOOT","BOOTLEG","BOOTSTRAP"] },
+  { items: ["FISH","LILY","MILL"], answer: "POND", difficulty: 1, bonds: ["FISHPOND","LILY POND","MILLPOND"] },
+  { items: ["SUN","MOON","LASER"], answer: "BEAM", difficulty: 1, bonds: ["SUNBEAM","MOONBEAM","LASER BEAM"] },
+  { items: ["AFTER","WORM","STICK"], answer: "GLOW", difficulty: 1, bonds: ["AFTERGLOW","GLOW WORM","GLOW STICK"] },
+  { items: ["CLUB","MAIL","FICTION"], answer: "FAN", difficulty: 1, bonds: ["FAN CLUB","FAN MAIL","FAN FICTION"] },
+  { items: ["CORD","OFF","SAW"], answer: "RIP", difficulty: 1, bonds: ["RIPCORD","RIP OFF","RIPSAW"] },
+  { items: ["GOLD","SUGAR","ADRENALINE"], answer: "RUSH", difficulty: 1, bonds: ["GOLD RUSH","SUGAR RUSH","ADRENALINE RUSH"] },
+  { items: ["BEER","ROOF","SECRET"], answer: "GARDEN", difficulty: 1, bonds: ["BEER GARDEN","ROOF GARDEN","SECRET GARDEN"] },
+  { items: ["SUGAR","DUST","PUNCH"], answer: "BOWL", difficulty: 1, bonds: ["SUGAR BOWL","DUST BOWL","PUNCH BOWL"] },
+  { items: ["BLOW","LIGHT","BEARER"], answer: "TORCH", difficulty: 1, bonds: ["BLOWTORCH","TORCHLIGHT","TORCHBEARER"] },
+  { items: ["DEAL","NERVE","MATERIAL"], answer: "RAW", difficulty: 1, bonds: ["RAW DEAL","RAW NERVE","RAW MATERIAL"] },
+  { items: ["TUNING","HAY","CARVING"], answer: "FORK", difficulty: 2, bonds: ["TUNING FORK","HAYFORK","CARVING FORK"] },
+  { items: ["EAR","PERI","T"], answer: "WIG", difficulty: 2, bonds: ["EARWIG","PERIWIG","TWIG"] },
+  { items: ["SCOTCH","ISLAND","BAR"], answer: "HOP", difficulty: 2, bonds: ["HOPSCOTCH","ISLAND HOP","BAR HOP"] },
+  { items: ["HILL","WAVE","FALLEN"], answer: "CREST", difficulty: 2, bonds: ["HILLCREST","WAVE CREST","CRESTFALLEN"] },
+  { items: ["BOOK","HORSE","MARKET"], answer: "STALL", difficulty: 2, bonds: ["BOOKSTALL","HORSE STALL","MARKET STALL"] },
+  { items: ["FORE","HALF","HEAD"], answer: "MAST", difficulty: 2, bonds: ["FOREMAST","HALF MAST","MASTHEAD"] },
+  { items: ["NAVY","WAX","ELEPHANT"], answer: "SEAL", difficulty: 2, bonds: ["NAVY SEAL","WAX SEAL","ELEPHANT SEAL"] },
+  { items: ["SUGAR","PUDDING","VICTORIA"], answer: "PLUM", difficulty: 2, bonds: ["SUGAR PLUM","PLUM PUDDING","VICTORIA PLUM"] },
+  { items: ["FISHING","FILM","HIGHLAND"], answer: "REEL", difficulty: 2, bonds: ["FISHING REEL","FILM REEL","HIGHLAND REEL"] },
+  { items: ["TIME","MACHINE","CAR"], answer: "SLOT", difficulty: 2, bonds: ["TIME SLOT","SLOT MACHINE","SLOT CAR"] },
+  { items: ["CRY","LANGUAGE","PLAY"], answer: "FOUL", difficulty: 2, bonds: ["CRY FOUL","FOUL LANGUAGE","FOUL PLAY"] },
+  { items: ["VACUUM","CONICAL","POCKET"], answer: "FLASK", difficulty: 2, bonds: ["VACUUM FLASK","CONICAL FLASK","POCKET FLASK"] },
+  { items: ["KITCHEN","COOK","EARTHEN"], answer: "WARE", difficulty: 2, bonds: ["KITCHENWARE","COOKWARE","EARTHENWARE"] },
+  { items: ["AUTO","PHOTO","PARA"], answer: "GRAPH", difficulty: 2, bonds: ["AUTOGRAPH","PHOTOGRAPH","PARAGRAPH"] },
+  { items: ["POINT","SLATE","CHECK"], answer: "BLANK", difficulty: 2, bonds: ["POINT BLANK","BLANK SLATE","BLANK CHECK"] },
+  { items: ["SUN","SPEED","ROTARY"], answer: "DIAL", difficulty: 2, bonds: ["SUNDIAL","SPEED DIAL","ROTARY DIAL"] },
+  { items: ["CARNI","HERBI","OMNI"], answer: "VORE", difficulty: 3, bonds: ["CARNIVORE","HERBIVORE","OMNIVORE"] },
+  { items: ["COR","E","AB"], answer: "RUPT", difficulty: 3, bonds: ["CORRUPT","ERUPT","ABRUPT"] },
+  { items: ["ASTRO","COSMO","AERO"], answer: "NAUT", difficulty: 3, bonds: ["ASTRONAUT","COSMONAUT","AERONAUT"] },
+  { items: ["GASTRO","ECO","TAXO"], answer: "NOMY", difficulty: 3, bonds: ["GASTRONOMY","ECONOMY","TAXONOMY"] },
+  { items: ["BIO","PSYCHO","THEO"], answer: "LOGY", difficulty: 3, bonds: ["BIOLOGY","PSYCHOLOGY","THEOLOGY"] },
+  { items: ["DEMO","BUREAU","ARISTO"], answer: "CRACY", difficulty: 3, bonds: ["DEMOCRACY","BUREAUCRACY","ARISTOCRACY"] },
+  { items: ["ATMO","HEMI","IONO"], answer: "SPHERE", difficulty: 3, bonds: ["ATMOSPHERE","HEMISPHERE","IONOSPHERE"] },
+  { items: ["META","POLY","ENDO"], answer: "MORPH", difficulty: 3, bonds: ["METAMORPH","POLYMORPH","ENDOMORPH"] },
+  { items: ["BIBLIO","FRANCO","ANGLO"], answer: "PHILE", difficulty: 3, bonds: ["BIBLIOPHILE","FRANCOPHILE","ANGLOPHILE"] },
+  { items: ["SOLAR","GUN","TROUSER"], answer: "FLARE", difficulty: 3, bonds: ["SOLAR FLARE","FLARE GUN","TROUSER FLARE"] },
+  { items: ["HEART","SAFETY","TRUMPET"], answer: "VALVE", difficulty: 3, bonds: ["HEART VALVE","SAFETY VALVE","TRUMPET VALVE"] },
+  { items: ["DOVER","LEMON","TRADER"], answer: "SOLE", difficulty: 3, bonds: ["DOVER SOLE","LEMON SOLE","SOLE TRADER"] },
+  { items: ["GOLD","HAY","YELLOW"], answer: "FEVER", difficulty: 3, bonds: ["GOLD FEVER","HAY FEVER","YELLOW FEVER"] },
+  { items: ["SUN","MASTER","BREAST"], answer: "STROKE", difficulty: 3, bonds: ["SUNSTROKE","MASTERSTROKE","BREASTSTROKE"] },
+  { items: ["DOUGH","PEA","MONKEY"], answer: "NUTS", difficulty: 4, bonds: ["DOUGHNUTS","PEANUTS","MONKEY NUTS"] },
+  { items: ["LIFT","DRIVE","ELEVATOR"], answer: "SHAFT", difficulty: 4, bonds: ["LIFT SHAFT","DRIVESHAFT","ELEVATOR SHAFT"] },
+  { items: ["WEATHER","SPATCH","PEA"], answer: "COCK", difficulty: 4, bonds: ["WEATHERCOCK","SPATCHCOCK","PEACOCK"] },
+  { items: ["COIN","PANCAKE","DISCUS"], answer: "TOSS", difficulty: 4, bonds: ["COIN TOSS","PANCAKE TOSS","DISCUS TOSS"] },
+  { items: ["LADY","FISH","BUTTER"], answer: "FINGER", difficulty: 4, bonds: ["LADYFINGER","FISH FINGER","BUTTERFINGER"] },
+  { items: ["POWER","HAND","MACHINE"], answer: "TOOL", difficulty: 4, bonds: ["POWER TOOL","HAND TOOL","MACHINE TOOL"] },
+  { items: ["PETROL","BICYCLE","SUMP"], answer: "PUMP", difficulty: 4, bonds: ["PETROL PUMP","BICYCLE PUMP","SUMP PUMP"] },
+  { items: ["SUGAR","ROSE","AM"], answer: "BUSH", difficulty: 4, bonds: ["SUGAR BUSH","ROSE BUSH","AMBUSH"] },
+  { items: ["DUCK","BAND","GLOVE"], answer: "RUBBER", difficulty: 4, bonds: ["RUBBER DUCK","RUBBER BAND","RUBBER GLOVE"] },
+  { items: ["BLUE","COAL","GREAT"], answer: "TIT", difficulty: 4, bonds: ["BLUE TIT","COAL TIT","GREAT TIT"] },
+  { items: ["DOOR","VOLUME","GEAR"], answer: "KNOB", difficulty: 4, bonds: ["DOOR KNOB","VOLUME KNOB","GEAR KNOB"] },
+  { items: ["EAGER","DAM","TAIL"], answer: "BEAVER", difficulty: 4, bonds: ["EAGER BEAVER","BEAVER DAM","BEAVER TAIL"] },
+  { items: ["JACK","DUMB","WISE"], answer: "ASS", difficulty: 4, bonds: ["JACKASS","DUMBASS","WISEASS"] },
+  { items: ["HAT","WINE","COAT"], answer: "RACK", difficulty: 4, bonds: ["HAT RACK","WINE RACK","COAT RACK"] },
+  { items: ["OUT","DRY","FLY"], answer: "BLOW", difficulty: 4, bonds: ["BLOWOUT","BLOW DRY","BLOWFLY"] },
+  { items: ["PARA","DIS","SUR"], answer: "MOUNT", difficulty: 4, bonds: ["PARAMOUNT","DISMOUNT","SURMOUNT"] },
+  { items: ["ROCK","SEA","GLASS"], answer: "BOTTOM", difficulty: 4, bonds: ["ROCK BOTTOM","SEA BOTTOM","GLASS BOTTOM"] },
+  { items: ["WISE","DOWN","UP"], answer: "CRACK", difficulty: 4, bonds: ["WISECRACK","CRACKDOWN","CRACK UP"] },
+  { items: ["EAR","PRESS","SHIRT"], answer: "STUD", difficulty: 4, bonds: ["EAR STUD","PRESS STUD","SHIRT STUD"] },
+  { items: ["LONG","FRENCH","SHORT"], answer: "HORN", difficulty: 4, bonds: ["LONGHORN","FRENCH HORN","SHORTHORN"] },
+  { items: ["GUARD","VIEW","ADMIRAL"], answer: "REAR", difficulty: 4, bonds: ["REARGUARD","REAR VIEW","REAR ADMIRAL"] },
+  { items: ["CHARTER","LIFE","BOARD"], answer: "MEMBER", difficulty: 4, bonds: ["CHARTER MEMBER","LIFE MEMBER","BOARD MEMBER"] },
+  { items: ["FINANCIAL","CARE","HOLIDAY"], answer: "PACKAGE", difficulty: 4, bonds: ["FINANCIAL PACKAGE","CARE PACKAGE","HOLIDAY PACKAGE"] },
+  { items: ["SWORD","MAIN","COUNTER"], answer: "THRUST", difficulty: 4, bonds: ["SWORD THRUST","MAIN THRUST","COUNTER THRUST"] },
+  { items: ["BED","CHEESE","WIDE"], answer: "SPREAD", difficulty: 4, bonds: ["BEDSPREAD","CHEESE SPREAD","WIDESPREAD"] },
+  { items: ["CRICKET", "VAMPIRE", "FRUIT"], answer: "BAT", difficulty: 1, bonds: ["CRICKET BAT", "VAMPIRE BAT", "FRUIT BAT"] },
+  { items: ["WASTE", "PEDAL", "RECYCLING"], answer: "BIN", difficulty: 1, bonds: ["WASTE BIN", "PEDAL BIN", "RECYCLING BIN"] },
+  { items: ["WATERING", "BEER", "TRASH"], answer: "CAN", difficulty: 1, bonds: ["WATERING CAN", "BEER CAN", "TRASH CAN"] },
+  { items: ["FIRST AID", "DRUM", "TOOL"], answer: "KIT", difficulty: 1, bonds: ["FIRST AID KIT", "DRUM KIT", "TOOL KIT"] },
+  { items: ["SHOT", "COFFEE", "TOBY"], answer: "MUG", difficulty: 1, bonds: ["MUG SHOT", "COFFEE MUG", "TOBY MUG"] },
+  { items: ["CARA", "MINI", "TRANSIT"], answer: "VAN", difficulty: 1, bonds: ["CARAVAN", "MINIVAN", "TRANSIT VAN"] },
+  { items: ["CLOTHES", "TENT", "SQUARE"], answer: "PEG", difficulty: 1, bonds: ["CLOTHES PEG", "TENT PEG", "SQUARE PEG"] },
+  { items: ["GASTRO", "QUIZ", "CRAWL"], answer: "PUB", difficulty: 1, bonds: ["GASTROPUB", "PUB QUIZ", "PUB CRAWL"] },
+  { items: ["CANDLE", "EAR", "SEALING"], answer: "WAX", difficulty: 1, bonds: ["CANDLE WAX", "EAR WAX", "SEALING WAX"] },
+  { items: ["STACK", "WIRE", "MAKER"], answer: "HAY", difficulty: 1, bonds: ["HAYSTACK", "HAYWIRE", "HAYMAKER"] },
+  { items: ["ROYAL", "POISON", "LIVE"], answer: "OAK", difficulty: 1, bonds: ["ROYAL OAK", "POISON OAK", "LIVE OAK"] },
+  { items: ["CYCLE", "AIRPORT", "NETWORK"], answer: "HUB", difficulty: 1, bonds: ["CYCLE HUB", "HUB AIRPORT", "HUB NETWORK"] },
+  { items: ["POOL", "SNOOKER", "CARD"], answer: "CUE", difficulty: 1, bonds: ["POOL CUE", "SNOOKER CUE", "CUE CARD"] },
+  { items: ["SWIMMING", "DOG", "DANCE"], answer: "LAP", difficulty: 1, bonds: ["SWIMMING LAP", "LAP DOG", "LAP DANCE"] },
+  { items: ["FLOOR", "SPIN", "HEAD"], answer: "MOP", difficulty: 1, bonds: ["FLOOR MOP", "SPIN MOP", "MOP HEAD"] },
+  { items: ["STICK", "KARATE", "LAMB"], answer: "CHOP", difficulty: 1, bonds: ["CHOPSTICK", "KARATE CHOP", "LAMB CHOP"] },
+  { items: ["BAR", "SCARE", "FEET"], answer: "CROW", difficulty: 1, bonds: ["CROWBAR", "SCARECROW", "CROW'S FEET"] },
+  { items: ["FIGHT", "IRON", "BUMP"], answer: "FIST", difficulty: 1, bonds: ["FISTFIGHT", "IRON FIST", "FIST BUMP"] },
+  { items: ["MIDDLE", "HIGH", "LOW"], answer: "BROW", difficulty: 1, bonds: ["MIDDLEBROW", "HIGHBROW", "LOWBROW"] },
+  { items: ["DUCK", "KILLER", "OUT"], answer: "WEED", difficulty: 1, bonds: ["DUCKWEED", "WEED KILLER", "WEED OUT"] },
+  { items: ["BROKER", "SHOP", "CHESS"], answer: "PAWN", difficulty: 2, bonds: ["PAWNBROKER", "PAWN SHOP", "CHESS PAWN"] },
+  { items: ["HAND", "OFF", "FRENCH"], answer: "CUFF", difficulty: 2, bonds: ["HANDCUFF", "OFF THE CUFF", "FRENCH CUFF"] },
+  { items: ["SLEEPING", "BITTER", "OW"], answer: "PILL", difficulty: 2, bonds: ["SLEEPING PILL", "BITTER PILL", "PILLOW"] },
+  { items: ["BITE", "JACK", "ING"], answer: "FROST", difficulty: 2, bonds: ["FROSTBITE", "JACK FROST", "FROSTING"] },
+  { items: ["BONE", "BAND", "LOCK"], answer: "WRIST", difficulty: 2, bonds: ["WRISTBONE", "WRISTBAND", "WRIST LOCK"] },
+  { items: ["BAKE", "UP", "CHOWDER"], answer: "CLAM", difficulty: 2, bonds: ["CLAMBAKE", "CLAM UP", "CLAM CHOWDER"] },
+  { items: ["WALK", "TON", "GANG"], answer: "PLANK", difficulty: 2, bonds: ["WALK THE PLANK", "PLANKTON", "GANGPLANK"] },
+  { items: ["BEER", "DODGER", "OVER"], answer: "DRAFT", difficulty: 2, bonds: ["DRAFT BEER", "DRAFT DODGER", "OVERDRAFT"] },
+  { items: ["CRACK", "RAID", "CHORUS"], answer: "DAWN", difficulty: 2, bonds: ["CRACK OF DAWN", "DAWN RAID", "DAWN CHORUS"] },
+  { items: ["SPIDER", "DUST", "BIRD"], answer: "MITE", difficulty: 2, bonds: ["SPIDER MITE", "DUST MITE", "BIRD MITE"] },
+  { items: ["MICROWAVE", "PROOF", "DUTCH"], answer: "OVEN", difficulty: 2, bonds: ["MICROWAVE OVEN", "OVEN PROOF", "DUTCH OVEN"] },
+  { items: ["KEY", "DOOR", "ONTO"], answer: "LATCH", difficulty: 2, bonds: ["LATCHKEY", "DOOR LATCH", "LATCH ONTO"] },
+  { items: ["LEAP", "MAN", "MARCH"], answer: "FROG", difficulty: 2, bonds: ["LEAPFROG", "FROGMAN", "FROG MARCH"] },
+  { items: ["SONG", "DIVE", "BLACK"], answer: "SWAN", difficulty: 2, bonds: ["SWAN SONG", "SWAN DIVE", "BLACK SWAN"] },
+  { items: ["GLASS", "HOLE", "RING"], answer: "SPY", difficulty: 2, bonds: ["SPYGLASS", "SPY HOLE", "SPY RING"] },
+  { items: ["BEAR", "VORTEX", "BI"], answer: "POLAR", difficulty: 2, bonds: ["POLAR BEAR", "POLAR VORTEX", "BIPOLAR"] },
+  { items: ["HILL", "SKIN", "WHACK"], answer: "MOLE", difficulty: 2, bonds: ["MOLEHILL", "MOLESKIN", "WHACK A MOLE"] },
+  { items: ["EX", "IN", "LAN"], answer: "TERN", difficulty: 3, bonds: ["EXTERN", "INTERN", "LANTERN"] },
+  { items: ["DI", "IN", "SUB"], answer: "STANCE", difficulty: 3, bonds: ["DISTANCE", "INSTANCE", "SUBSTANCE"] },
+  { items: ["CENTRI", "RE", "SUBTER"], answer: "FUGE", difficulty: 3, bonds: ["CENTRIFUGE", "REFUGE", "SUBTERFUGE"] },
+  { items: ["ALTI", "GRATI", "LONGI"], answer: "TUDE", difficulty: 3, bonds: ["ALTITUDE", "GRATITUDE", "LONGITUDE"] },
+  { items: ["PRE", "SE", "CON"], answer: "CEDE", difficulty: 3, bonds: ["PRECEDE", "SECEDE", "CONCEDE"] },
+  { items: ["EXCUR", "VER", "PAS"], answer: "SION", difficulty: 3, bonds: ["EXCURSION", "VERSION", "PASSION"] },
+  { items: ["CERE", "TESTI", "PATRI"], answer: "MONY", difficulty: 3, bonds: ["CEREMONY", "TESTIMONY", "PATRIMONY"] },
+  { items: ["TERR", "INCRED", "INVINC"], answer: "IBLE", difficulty: 3, bonds: ["TERRIBLE", "INCREDIBLE", "INVINCIBLE"] },
+  { items: ["SWEET", "ADAMS", "HILL"], answer: "FANNY", difficulty: 4, bonds: ["SWEET FANNY ADAMS", "FANNY ADAMS", "FANNY HILL"] },
+  { items: ["STEAK", "PARLIAMENT", "US"], answer: "RUMP", difficulty: 4, bonds: ["RUMP STEAK", "RUMP PARLIAMENT", "RUMPUS"] },
+  { items: ["POP", "JAM", "CUSTARD"], answer: "TART", difficulty: 4, bonds: ["POP TART", "JAM TART", "CUSTARD TART"] },
+  { items: ["FREE", "WONKA", "NILLY"], answer: "WILLY", difficulty: 4, bonds: ["FREE WILLY", "WILLY WONKA", "WILLY NILLY"] },
+  { items: ["CLICK", "JAIL", "DEAD"], answer: "BAIT", difficulty: 4, bonds: ["CLICKBAIT", "JAILBAIT", "DEAD BAIT"] },
+];
+
+// Homophones: if the answer has a sound-alike, show it so players know both count
+const HOMOPHONES = {
+  "BARE": "BEAR",   "BEAR": "BARE",
+  "BALL": "BAWL",   "BAWL": "BALL",
+  "BEAT": "BEET",   "BEET": "BEAT",
+  "BOARD": "BORED", "BORED": "BOARD",
+  "BOW": "BOUGH",   "BOUGH": "BOW",
+  "BRAKE": "BREAK", "BREAK": "BRAKE",
+  "BREAD": "BRED",  "BRED": "BREAD",
+  "BUY": "BY",      "BY": "BUY",
+  "CELL": "SELL",   "SELL": "CELL",
+  "CEREAL": "SERIAL", "SERIAL": "CEREAL",
+  "COARSE": "COURSE",
+  "DEAR": "DEER",   "DEER": "DEAR",
+  "DIE": "DYE",     "DYE": "DIE",
+  "EWE": "YOU",
+  "EYELET": "ISLET",
+  "FAIR": "FARE",   "FARE": "FAIR",
+  "FEAT": "FEET",   "FEET": "FEAT",
+  "FLOUR": "FLOWER","FLOWER": "FLOUR",
+  "FORE": "FOR",
+  "GRATE": "GREAT",
+  "GROAN": "GROWN", "GROWN": "GROAN",
+  "GUISE": "GUYS",
+  "HAIR": "HARE",   "HARE": "HAIR",
+  "HALL": "HAUL",   "HAUL": "HALL",
+  "HEAL": "HEEL",   "HEEL": "HEAL",
+  "HEAR": "HERE",   "HERE": "HEAR",
+  "HEARD": "HERD",  "HERD": "HEARD",
+  "HOLE": "WHOLE",  "WHOLE": "HOLE",
+  "HORSE": "HOARSE","HOARSE": "HORSE",
+  "HOUR": "OUR",    "OUR": "HOUR",
+  "KNOT": "NOT",    "NOT": "KNOT",
+  "KNIGHT": "NIGHT","NIGHT": "KNIGHT",
+  "KNOW": "NO",     "NO": "KNOW",
+  "LEAD": "LED",    "LED": "LEAD",
+  "LOAN": "LONE",   "LONE": "LOAN",
+  "LEAF": "LIEF",
+  "LEAN": "LIEN",
+  "LOOT": "LUTE",
+  "MADE": "MAID",   "MAID": "MADE",
+  "MAIL": "MALE",   "MALE": "MAIL",
+  "MEAT": "MEET",   "MEET": "MEAT",
+  "METAL": "METTLE",
+  "ALTAR": "ALTER",  "ALTER": "ALTAR",
+  "CORD":  "CHORD",  "CHORD": "CORD",
+  "LESSON": "LESSEN","LESSEN": "LESSON",
+  "MEDAL": "MEDDLE", "MEDDLE": "MEDAL",
+  "MUSCLE": "MUSSEL","MUSSEL": "MUSCLE",
+  "NAVAL": "NAVEL",
+  "NONE": "NUN",
+  "OAR": "OR",
+  "PAIN": "PANE",   "PANE": "PAIN",
+  "PAIR": "PEAR",   "PEAR": "PAIR",
+  "PEACE": "PIECE", "PIECE": "PEACE",
+  "PLAIN": "PLANE", "PLANE": "PLAIN",
+  "POLE": "POLL",   "POLL": "POLE",
+  "POUR": "PORE",
+  "PRAY": "PREY",   "PREY": "PRAY",
+  "PRINCIPAL": "PRINCIPLE",
+  "PROFIT": "PROPHET",
+  "RAIN": "REIN / REIGN",   "REIN": "RAIN / REIGN",   "REIGN": "RAIN / REIN",
+  "RAISE": "RAYS",
+  "READ": "REED",   "REED": "READ",
+  "RIGHT": "WRITE", "WRITE": "RIGHT",
+  "RING": "WRING",  "WRING": "RING",
+  "ROAD": "ROWED",
+  "ROLE": "ROLL",   "ROLL": "ROLE",
+  "ROOT": "ROUTE",
+  "ROSE": "ROWS",
+  "SAIL": "SALE",   "SALE": "SAIL",
+  "SCENE": "SEEN",  "SEEN": "SCENE",
+  "SEA": "SEE",     "SEE": "SEA",
+  "SEAM": "SEEM",   "SEEM": "SEAM",
+  "SIDE": "SIGHED",
+  "SIGHT": "SITE",  "SITE": "SIGHT",
+  "SOLE": "SOUL",   "SOUL": "SOLE",
+  "SOME": "SUM",    "SUM": "SOME",
+  "SON": "SUN",     "SUN": "SON",
+  "STAIR": "STARE", "STARE": "STAIR",
+  "STAKE": "STEAK", "STEAK": "STAKE",
+  "STEAL": "STEEL", "STEEL": "STEAL",
+  "SUITE": "SWEET", "SWEET": "SUITE",
+  "TAIL": "TALE",   "TALE": "TAIL",
+  "THEIR": "THERE",
+  "TIDE": "TIED",
+  "TO": "TOO",
+  "TOE": "TOW",
+  "VALE": "VEIL",
+  "VAIN": "VANE / VEIN", "VANE": "VAIN / VEIN", "VEIN": "VAIN / VANE",
+  "WAIST": "WASTE", "WASTE": "WAIST",
+  "WAIVE": "WAVE",  "WAVE": "WAIVE",
+  "WAIT": "WEIGHT", "WEIGHT": "WAIT",
+  "WAY": "WEIGH",   "WEIGH": "WAY",
+  "WEAK": "WEEK",   "WEEK": "WEAK",
+  "WOOD": "WOULD",  "WOULD": "WOOD",
+  "WOOD": "WOED",
+  "WEAR": "WHERE",  "WHERE": "WEAR",
+};
+
+let current = 0;
+
+function init() {
+  current = 0;
+  for (let i = DATA.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [DATA[i], DATA[j]] = [DATA[j], DATA[i]];
+  }
+  document.getElementById('card').style.display = '';
+  document.getElementById('done').classList.remove('show');
+  document.getElementById('done-msg').textContent = "You've worked through all " + DATA.length + " TRIBONDs.";
+  render();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function render() {
+  const d = DATA[current];
+  document.getElementById('counter').textContent = 'Puzzle ' + (current + 1) + ' of ' + DATA.length;
+  const pairs = d.items.map((item, i) => ({ item, bond: d.bonds[i] }));
+  shuffle(pairs);
+  ['t0','t1','t2'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.textContent = pairs[i].item;
+    el.classList.remove('lit');
+  });
+  DATA[current]._shuffledBonds = pairs.map(p => p.bond);
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('answer-block').classList.remove('show');
+  document.getElementById('next-btn').textContent = current === DATA.length - 1 ? 'Finish' : 'Next Puzzle \u2192';
+  const dot = document.getElementById('diff-dot');
+  dot.className = 'diff-dot d' + (d.difficulty || 1);
+  dot.title = ['', 'Easy', 'Medium', 'Hard', '😏 Saucy'][d.difficulty || 1];
+}
+
+function reveal() {
+  const d = DATA[current];
+  ['t0','t1','t2'].forEach(id => document.getElementById(id).classList.add('lit'));
+  document.getElementById('answer-word').textContent = d.answer;
+  // Use puzzle-level homophone override first, then fall back to global map
+  const homophone = d.homophone || HOMOPHONES[d.answer] || null;
+  const hintEl = document.getElementById('homophone-hint');
+  const labelEl = document.getElementById('homophone-label');
+  if (homophone) {
+    hintEl.textContent = '/ ' + homophone;
+    labelEl.textContent = 'sounds like';
+  } else {
+    hintEl.textContent = '';
+    labelEl.textContent = '';
+  }
+  const bondsEl = document.getElementById('bonds');
+  bondsEl.innerHTML = '';
+  (d._shuffledBonds || d.bonds).forEach(b => {
+    const chip = document.createElement('div');
+    chip.className = 'bond-chip';
+    chip.textContent = b;
+    bondsEl.appendChild(chip);
+  });
+  document.getElementById('reveal-btn').style.display = 'none';
+  document.getElementById('answer-block').classList.add('show');
+}
+
+function next() {
+  current++;
+  if (current >= DATA.length) {
+    document.getElementById('card').style.display = 'none';
+    document.getElementById('done').classList.add('show');
+  } else {
+    const card = document.getElementById('card');
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = '';
+    render();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
